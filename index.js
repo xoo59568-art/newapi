@@ -8,7 +8,7 @@ app.set("trust proxy", true);
 
 const CREATOR = "Sreejanxmd";
 
-// 🔥 Home route
+// ✅ Home
 app.get("/", (req, res) => {
   res.json({
     status: true,
@@ -19,131 +19,144 @@ app.get("/", (req, res) => {
 
 
 // =======================
-// 📸 Instagram Downloader
+// 📸 Instagram
 // =======================
 app.get("/api/instagram", async (req, res) => {
   try {
     const { url } = req.query;
-
-    if (!url) {
-      return res.status(400).json({
-        status: false,
-        message: "Instagram URL required",
-        creator: CREATOR
-      });
-    }
+    if (!url) return res.status(400).json({ status: false, creator: CREATOR });
 
     const baseUrl = `${req.protocol}://${req.get("host")}`;
 
-    const response = await axios.get(
+    const { data } = await axios.get(
       `https://api.ootaizumi.web.id/downloader/instagram/v1?url=${encodeURIComponent(url)}`
     );
 
-    const data = response.data;
-
     res.json({
       status: true,
-      statusCode: 200,
       creator: CREATOR,
-      baseUrl: baseUrl,
+      baseUrl,
       result: data.result
     });
 
-  } catch (err) {
-    res.status(500).json({
-      status: false,
-      message: "Failed to fetch Instagram data",
-      creator: CREATOR
-    });
+  } catch {
+    res.json({ status: false, creator: CREATOR });
   }
 });
 
 
 // =======================
-// 📘 Facebook Downloader
+// 📘 Facebook
 // =======================
 app.get("/api/facebook", async (req, res) => {
   try {
     const { url } = req.query;
-
-    if (!url) {
-      return res.status(400).json({
-        status: false,
-        message: "Facebook URL required",
-        creator: CREATOR
-      });
-    }
+    if (!url) return res.status(400).json({ status: false, creator: CREATOR });
 
     const baseUrl = `${req.protocol}://${req.get("host")}`;
 
-    const response = await axios.get(
+    const { data } = await axios.get(
       `https://apis.davidcyril.name.ng/facebook2?url=${encodeURIComponent(url)}`
     );
-
-    const data = response.data;
 
     res.json({
       status: true,
       creator: CREATOR,
-      baseUrl: baseUrl,
+      baseUrl,
       result: data.video
     });
 
-  } catch (err) {
-    res.status(500).json({
-      status: false,
-      message: "Failed to fetch Facebook video",
-      creator: CREATOR
-    });
+  } catch {
+    res.json({ status: false, creator: CREATOR });
   }
 });
 
 
 // =======================
-// 🎵 Song Downloader
+// 🎵 Song
 // =======================
 app.get("/api/song", async (req, res) => {
   try {
     const { url } = req.query;
-
-    if (!url) {
-      return res.status(400).json({
-        status: false,
-        message: "YouTube URL required",
-        creator: CREATOR
-      });
-    }
+    if (!url) return res.status(400).json({ status: false, creator: CREATOR });
 
     const baseUrl = `${req.protocol}://${req.get("host")}`;
 
-    const response = await axios.get(
+    const { data } = await axios.get(
       `https://apiskeith.top/download/audio?url=${encodeURIComponent(url)}`
     );
-
-    const data = response.data;
 
     res.json({
       status: true,
       creator: CREATOR,
-      baseUrl: baseUrl,
+      baseUrl,
       result: {
         audio: data.result
       }
     });
 
-  } catch (err) {
-    res.status(500).json({
-      status: false,
-      message: "Failed to fetch audio",
-      creator: CREATOR
-    });
+  } catch {
+    res.json({ status: false, creator: CREATOR });
   }
 });
 
 
 // =======================
-// 🚀 Start Server
+// 🖼️ Image Search
 // =======================
+app.get("/api/image", async (req, res) => {
+  try {
+    const { query } = req.query;
+    if (!query) return res.status(400).json({ status: false, creator: CREATOR });
+
+    const baseUrl = `${req.protocol}://${req.get("host")}`;
+
+    const { data } = await axios.get(
+      `https://apiskeith.top/search/images?query=${encodeURIComponent(query)}`
+    );
+
+    res.json({
+      status: true,
+      creator: CREATOR,
+      baseUrl,
+      total: data.result.length,
+      result: data.result
+    });
+
+  } catch {
+    res.json({ status: false, creator: CREATOR });
+  }
+});
+
+
+// =======================
+// 🎤 Lyrics
+// =======================
+app.get("/api/lyrics", async (req, res) => {
+  try {
+    const { song } = req.query;
+    if (!song) return res.status(400).json({ status: false, creator: CREATOR });
+
+    const baseUrl = `${req.protocol}://${req.get("host")}`;
+
+    const { data } = await axios.get(
+      `https://apis.davidcyril.name.ng/lyrics3?song=${encodeURIComponent(song)}`
+    );
+
+    res.json({
+      status: true,
+      creator: CREATOR,
+      baseUrl,
+      result: data.result
+    });
+
+  } catch {
+    res.json({ status: false, creator: CREATOR });
+  }
+});
+
+
+// 🚀 Start
 app.listen(PORT, () => {
   console.log("Server running on port " + PORT);
 });
