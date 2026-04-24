@@ -130,6 +130,39 @@ app.get("/api/image", async (req, res) => {
 
 
 // =======================
+// 🎤 ytmp4
+// =======================
+
+app.get("/api/ytmp4", async (req, res) => {
+  try {
+    const { url } = req.query;
+
+    if (!url) {
+      return res.json({ status: false, creator: CREATOR });
+    }
+
+    const baseUrl = `${req.protocol}://${req.get("host")}`;
+
+    const { data } = await axios.get(
+      `https://apiskeith.top/download/dlmp4?url=${encodeURIComponent(url)}`
+    );
+
+    res.json({
+      status: true,
+      creator: CREATOR,
+      baseUrl,
+      url: data.result || data
+    });
+
+  } catch (e) {
+    res.json({
+      status: false,
+      creator: CREATOR,
+      error: e.message
+    });
+  }
+});
+// =======================
 // 🎤 Lyrics
 // =======================
 app.get("/api/lyrics", async (req, res) => {
