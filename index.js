@@ -208,8 +208,10 @@ app.get("/api/insta2", async (req, res) => {
     res.json({
       status: true,
       creator: CREATOR,
+      quality: data.quality,
+      ext: data.ext,
       baseUrl,
-      url: data.result || data
+      url: data.url || data
     });
 
   } catch (e) {
@@ -220,7 +222,70 @@ app.get("/api/insta2", async (req, res) => {
     });
   }
 });
-// =======================
+
+
+
+
+
+///Fixed printers 
+
+import axios from "axios";
+
+app.get("/api/pinterest", async (req, res) => {
+  try {
+    const { url } = req.query;
+
+    if (!url) {
+      return res.status(400).json({
+        status: false,
+        creator: CREATOR,
+        error: "Missing Pinterest URL"
+      });
+    }
+
+    const baseUrl = `${req.protocol}://${req.get("host")}`;
+
+    const response = await axios.get(
+      `https://api-faa.my.id/faa/pin-down?url=${encodeURIComponent(url)}`,
+      { timeout: 10000 }
+    );
+
+    const data = response.data?.result;
+
+    if (!data || !data.medias || data.medias.length === 0) {
+      return res.status(500).json({
+        status: false,
+        creator: CREATOR,
+        error: "No media found"
+      });
+    }
+
+    // 🎯 Extract first media
+    const media = data.medias[0];
+
+    return res.json({
+      status: true,
+      creator: CREATOR, // 👈 change this
+      baseUrl,
+      title: data.title,
+      thumbnail: data.thumbnail,
+      type: media.type,
+      quality: media.quality,
+      url: media.url
+    });
+
+  } catch (e) {
+    console.error(e);
+
+    return res.status(500).json({
+      status: false,
+      creator: CREATOR,
+      error: "Failed to fetch Pinterest media"
+    });
+  }
+});
+
+// ======================
 // 🎤 Lyrics
 // =======================
 app.get("/api/lyrics", async (req, res) => {
