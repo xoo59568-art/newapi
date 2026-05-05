@@ -229,8 +229,6 @@ app.get("/api/insta2", async (req, res) => {
 
 ///Fixed printers 
 
-import axios from "axios";
-
 app.get("/api/pinterest", async (req, res) => {
   try {
     const { url } = req.query;
