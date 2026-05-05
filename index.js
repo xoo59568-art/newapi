@@ -45,6 +45,31 @@ app.get("/api/instagram", async (req, res) => {
 });
 
 
+//Facebook2
+
+app.get("/api/fb2", async (req, res) => {
+  try {
+    const { url } = req.query;
+    if (!url) return res.status(400).json({ status: false, creator: CREATOR });
+
+    const baseUrl = `${req.protocol}://${req.get("host")}`;
+
+    const { data } = await axios.get(
+      `https://apiskeith.top/download/fbdown?url=${encodeURIComponent(url)}`
+    );
+
+    res.json({
+      status: true,
+      creator: CREATOR,
+      baseUrl,
+      result: data.result
+    });
+
+  } catch {
+    res.json({ status: false, creator: CREATOR });
+  }
+});
+
 // =======================
 // 📘 Facebook
 // =======================
