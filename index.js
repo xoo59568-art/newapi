@@ -162,6 +162,39 @@ app.get("/api/ytmp4", async (req, res) => {
     });
   }
 });
+
+
+//Instagram 2
+
+app.get("/api/insta2", async (req, res) => {
+  try {
+    const { url } = req.query;
+
+    if (!url) {
+      return res.json({ status: false, creator: CREATOR });
+    }
+
+    const baseUrl = `${req.protocol}://${req.get("host")}`;
+
+    const { data } = await axios.get(
+      `https://apiskeith.top/download/instadl?url=${encodeURIComponent(url)}`
+    );
+
+    res.json({
+      status: true,
+      creator: CREATOR,
+      baseUrl,
+      url: data.result || data
+    });
+
+  } catch (e) {
+    res.json({
+      status: false,
+      creator: CREATOR,
+      error: e.message
+    });
+  }
+});
 // =======================
 // 🎤 Lyrics
 // =======================
