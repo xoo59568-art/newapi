@@ -227,58 +227,55 @@ app.get("/api/insta2", async (req, res) => {
 
 
 
-///Fixed printers 
-
+//Pinterest 
 app.get("/api/pinterest", async (req, res) => {
   try {
     const { url } = req.query;
 
     if (!url) {
-      return res.status(400).json({
+      return res.json({
         status: false,
-        creator: CREATOR,
-        error: "Missing Pinterest URL"
+        creator: CREATOR
       });
     }
 
     const baseUrl = `${req.protocol}://${req.get("host")}`;
 
-    const response = await axios.get(
-      `https://api-faa.my.id/faa/pin-down?url=${encodeURIComponent(url)}`,
-      { timeout: 10000 }
+    const { data } = await axios.get(
+      `https://apis.davidcyril.name.ng/download/pinterest?url=${encodeURIComponent(url)}`
     );
 
-    const data = response.data?.result;
-
-    if (!data || !data.medias || data.medias.length === 0) {
-      return res.status(500).json({
+    if (!data.success) {
+      return res.json({
         status: false,
         creator: CREATOR,
-        error: "No media found"
+        error: "Failed to fetch Pinterest media"
       });
     }
 
-    // 🎯 Extract first media
-    const media = data.medias[0];
+    const medias = data.data.medias || [];
 
-    return res.json({
+    // mp4 media select
+    const video =
+      medias.find(v => v.extension === "mp4") || medias[0];
+
+    res.json({
       status: true,
-      creator: CREATOR, // 👈 change this
+      creator: CREATOR,
+      title: data.data.title,
+      thumbnail: data.data.thumbnail,
+      quality: video.quality,
+      ext: video.extension,
+      size: video.formattedSize,
       baseUrl,
-      title: data.title,
-      thumbnail: data.thumbnail,
-      type: media.type,
-      quality: media.quality,
-      url: media.url
+      url: video.url
     });
 
   } catch (e) {
-    console.error(e);
-
-    return res.status(500).json({
+    res.json({
       status: false,
       creator: CREATOR,
-      error: "Failed to fetch Pinterest media"
+      error: e.message
     });
   }
 });
