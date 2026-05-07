@@ -280,6 +280,47 @@ app.get("/api/pinterest", async (req, res) => {
   }
 });
 
+
+
+
+
+// Fixed Pinterest 
+
+
+app.get("/api/pint", async (req, res) => {
+  try {
+    const { url } = req.query;
+
+    if (!url) {
+      return res.json({ status: false, creator: CREATOR });
+    }
+
+    const baseUrl = `${req.protocol}://${req.get("host")}`;
+
+    const { data } = await axios.get(
+      `https://apis.davidcyril.name.ng/download/pinterest?url=${encodeURIComponent(url)}`
+    );
+
+    res.json({
+      status: true,
+      creator: CREATOR,
+      quality: data.quality,
+      ext: data.ext,
+      quality: data.quality,
+      
+      baseUrl,
+      url: data.url || data
+    });
+
+  } catch (e) {
+    res.json({
+      status: false,
+      creator: CREATOR,
+      error: e.message
+    });
+  }
+});
+
 // ======================
 // 🎤 Lyrics
 // =======================
