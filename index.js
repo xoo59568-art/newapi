@@ -72,6 +72,31 @@ app.get("/api/insta", async (req, res) => {
 });
 
 
+//fb3
+
+app.get("/api/fb3", async (req, res) => {
+  try {
+    const { url } = req.query;
+    if (!url) return res.status(400).json({ status: false, creator: CREATOR });
+
+    const baseUrl = `${req.protocol}://${req.get("host")}`;
+
+    const { data } = await axios.get(
+      `https://apiskeith.top/download/fbdl?url=${encodeURIComponent(url)}`
+    );
+
+    res.json({
+      status: true,
+      creator: CREATOR,
+      baseUrl,
+      result: data.result
+    });
+
+  } catch {
+    res.json({ status: false, creator: CREATOR });
+  }
+});
+
 
 //Facebook2
 
