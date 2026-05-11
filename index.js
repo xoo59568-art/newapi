@@ -169,7 +169,9 @@ app.get("/api/song", async (req, res) => {
       creator: CREATOR,
       baseUrl,
       result: {
-        audio: data.result
+        audio: data.result,
+        url: data.result,
+        song: data.result,
       }
     });
 
