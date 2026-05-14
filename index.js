@@ -21,6 +21,7 @@ app.get("/", (req, res) => {
 // =======================
 // 📸 Instagram
 // =======================
+
 app.get("/api/instagram", async (req, res) => {
   try {
     const { url } = req.query;
@@ -29,21 +30,20 @@ app.get("/api/instagram", async (req, res) => {
     const baseUrl = `${req.protocol}://${req.get("host")}`;
 
     const { data } = await axios.get(
-      `https://api.ootaizumi.web.id/downloader/instagram/v1?url=${encodeURIComponent(url)}`
+      `https://api-faa.my.id/faa/igdl?url=${encodeURIComponent(url)}`
     );
 
     res.json({
       status: true,
       creator: CREATOR,
       baseUrl,
-      result: data.result
+      url: data.result
     });
 
   } catch {
     res.json({ status: false, creator: CREATOR });
   }
 });
-
 
 // =======================
 // 📸 Instagram
