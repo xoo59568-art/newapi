@@ -63,7 +63,8 @@ app.get("/api/insta", async (req, res) => {
       status: true,
       creator: CREATOR,
       baseUrl,
-      url: data.url
+      thumbnail: data.data[0].thumbnail,
+      url: data.data[0].url
     });
 
   } catch {
