@@ -184,6 +184,8 @@ app.get("/api/facebook", async (req, res) => {
 });
 
 
+
+      
 // =======================
 // ▶️ Play API
 // =======================
@@ -209,10 +211,10 @@ app.get("/api/play", async (req, res) => {
 
     const baseUrl = `${req.protocol}://${req.get("host")}`;
 
-    let video = null;
+    let video;
 
     // =======================
-    // IF YOUTUBE URL
+    // IF URL
     // =======================
 
     if (
@@ -220,19 +222,11 @@ app.get("/api/play", async (req, res) => {
       input.includes("youtu.be")
     ) {
 
-      video = {
-        title: "YouTube Audio",
-        url: input,
-        thumbnail: null,
-        duration: null,
-        videoId: null,
-        views: null,
-        uploaded: null,
-        author: {
-          name: null,
-          url: null
-        }
-      };
+      const searchRes = await axios.get(
+        `https://rabbitapi.nett.to/search/youtube?q=${encodeURIComponent(input)}&limit=1`
+      );
+
+      video = searchRes.data.result[0];
 
     } else {
 
@@ -246,29 +240,28 @@ app.get("/api/play", async (req, res) => {
 
       video = searchRes.data.result[0];
 
-      if (!video) {
+    }
 
-        return res.json({
-          status: false,
-          creator: CREATOR,
-          message: "No result found"
-        });
+    if (!video) {
 
-      }
+      return res.json({
+        status: false,
+        creator: CREATOR,
+        message: "No result found"
+      });
 
     }
 
     // =======================
-    // GET AUDIO
+    // AUDIO API
     // =======================
 
     const audioRes = await axios.get(
       `https://rabbitapi.nett.to/api/song?url=${encodeURIComponent(video.url)}`
     );
 
-    const audio =
-      audioRes.data.payload?.result?.audio ||
-      audioRes.data.payload?.result?.url;
+    const audioUrl =
+      audioRes.data.payload.result.audio;
 
     // =======================
     // RESPONSE
@@ -298,11 +291,10 @@ app.get("/api/play", async (req, res) => {
 
         thumbnail: video.thumbnail,
 
-        audio: audio,
+        url: audioUrl,
 
         author: {
-          name: video.author?.name,
-          url: video.author?.url
+          name: video.author?.name
         }
 
       }
@@ -324,7 +316,6 @@ app.get("/api/play", async (req, res) => {
   }
 
 });
-
 
 
 
