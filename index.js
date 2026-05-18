@@ -56,14 +56,14 @@ app.get("/api/insta", async (req, res) => {
     const baseUrl = `${req.protocol}://${req.get("host")}`;
 
     const { data } = await axios.get(
-      `https://api-faa.my.id/faa/igdl?url=${encodeURIComponent(url)}`
+      `https://api-aswin-sparky.koyeb.app/api/downloader/igdl?url=${encodeURIComponent(url)}`
     );
 
     res.json({
       status: true,
       creator: CREATOR,
       baseUrl,
-      url: data.result
+      url: data.url
     });
 
   } catch {
