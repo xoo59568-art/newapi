@@ -192,7 +192,7 @@
         -webkit-backdrop-filter: blur(10px);
         transition: var(--transition);
         display: grid;
-        grid-template-rows: auto 0fr; /* Advanced smooth expand technique */
+        grid-template-rows: auto 0fr;
         will-change: transform, border-color;
       }
 
@@ -228,12 +228,18 @@
         margin-bottom: 0.5rem;
       }
 
-      .route-path {
-        font-family: 'JetBrains Mono', monospace;
-        font-size: 1.1rem;
+      .route-title-text {
+        font-size: 1.15rem;
         color: #f1f5f9;
-        font-weight: 500;
-        word-break: break-all;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+      }
+
+      .route-title-text i {
+        font-size: 1.1rem;
+        color: rgba(255, 255, 255, 0.4);
       }
 
       .arrow-icon {
@@ -252,7 +258,7 @@
         color: white;
       }
 
-      /* Smooth Content Wrap */
+      /* Content Section Control */
       .expand-container {
         overflow: hidden;
         transition: var(--transition);
@@ -334,7 +340,7 @@
         color: white;
       }
 
-      /* Console Output Terminal */
+      /* Terminal Panel */
       .terminal-box {
         margin-top: 1.25rem;
         border-radius: 16px;
@@ -397,7 +403,7 @@
 
       @keyframes rot { to { transform: rotate(360deg); } }
 
-      /* Toast Micro-Alerts */
+      /* Toast Notification */
       .toast-msg {
         position: fixed;
         bottom: 25px;
@@ -423,7 +429,7 @@
         opacity: 1;
       }
 
-      /* Footer blueprint */
+      /* Premium Footer Blueprint */
       .premium-footer {
         text-align: center;
         padding: 4rem 1.5rem;
@@ -476,7 +482,7 @@
       .icon-circle-link.whatsapp-color:hover { background: #22c55e; border-color: transparent; box-shadow: 0 0 15px rgba(34, 197, 94, 0.2); }
       .icon-circle-link.instagram-color:hover { background: linear-gradient(45deg, #f09433 0%, #dc2743 50%, #bc1888 100%); border-color: transparent; box-shadow: 0 0 15px rgba(220, 39, 67, 0.2); }
 
-      /* Robust Responsive Design avoiding desktop scale bug */
+      /* Grid Fixes */
       @media (max-width: 900px) {
         .stats-panel { grid-template-columns: repeat(2, 1fr); gap: 0.85rem; }
       }
@@ -523,12 +529,12 @@
 
       <div class="cards-grid">
         
-        <!-- 1. All Downloader -->
+        <!-- 1. Universal Downloader -->
         <div class="custom-card active" id="api_0">
           <div class="card-header-flex" onclick="toggleCard('api_0')">
             <div>
               <span class="badge-get">GET</span>
-              <div class="route-path">/Dwnall</div>
+              <div class="route-title-text"><i class="fas fa-download"></i> Universal Downloader</div>
             </div>
             <i class="fas fa-chevron-down arrow-icon"></i>
           </div>
@@ -537,8 +543,8 @@
               <label class="label-text">Media Source URL</label>
               <input type="text" class="field-input" id="in_0" placeholder="Enter universal media url target..." data-param="url">
               <div class="btn-flex-group">
-                <button class="action-btn btn-run" onclick="fireRequest('/Dwnall', 0)"><i class="fas fa-bolt"></i> Execute</button>
-                <button class="action-btn btn-code" onclick="grabCurl('/Dwnall', 0)"><i class="fas fa-terminal"></i> cURL</button>
+                <button class="action-btn btn-run" onclick="fireRequest('/api/dwnall', 0)"><i class="fas fa-bolt"></i> Execute</button>
+                <button class="action-btn btn-code" onclick="grabCurl('/api/dwnall', 0)"><i class="fas fa-terminal"></i> cURL</button>
               </div>
               <div class="terminal-box">
                 <div class="terminal-nav">
@@ -556,7 +562,7 @@
           <div class="card-header-flex" onclick="toggleCard('api_1')">
             <div>
               <span class="badge-get">GET</span>
-              <div class="route-path">/insta</div>
+              <div class="route-title-text"><i class="fab fa-instagram"></i> Instagram Downloader</div>
             </div>
             <i class="fas fa-chevron-down arrow-icon"></i>
           </div>
@@ -565,8 +571,8 @@
               <label class="label-text">Instagram URL</label>
               <input type="text" class="field-input" id="in_1" placeholder="Paste Instagram post, reel or IGTV link..." data-param="url">
               <div class="btn-flex-group">
-                <button class="action-btn btn-run" onclick="fireRequest('/insta', 1)"><i class="fas fa-bolt"></i> Execute</button>
-                <button class="action-btn btn-code" onclick="grabCurl('/insta', 1)"><i class="fas fa-terminal"></i> cURL</button>
+                <button class="action-btn btn-run" onclick="fireRequest('/api/insta', 1)"><i class="fas fa-bolt"></i> Execute</button>
+                <button class="action-btn btn-code" onclick="grabCurl('/api/insta', 1)"><i class="fas fa-terminal"></i> cURL</button>
               </div>
               <div class="terminal-box">
                 <div class="terminal-nav">
@@ -584,7 +590,7 @@
           <div class="card-header-flex" onclick="toggleCard('api_2')">
             <div>
               <span class="badge-get">GET</span>
-              <div class="route-path">/Fb</div>
+              <div class="route-title-text"><i class="fab fa-facebook"></i> Facebook Downloader</div>
             </div>
             <i class="fas fa-chevron-down arrow-icon"></i>
           </div>
@@ -593,8 +599,8 @@
               <label class="label-text">Facebook Video URL</label>
               <input type="text" class="field-input" id="in_2" placeholder="Enter Facebook video/reel URL target..." data-param="url">
               <div class="btn-flex-group">
-                <button class="action-btn btn-run" onclick="fireRequest('/Fb', 2)"><i class="fas fa-bolt"></i> Execute</button>
-                <button class="action-btn btn-code" onclick="grabCurl('/Fb', 2)"><i class="fas fa-terminal"></i> cURL</button>
+                <button class="action-btn btn-run" onclick="fireRequest('/api/fb', 2)"><i class="fas fa-bolt"></i> Execute</button>
+                <button class="action-btn btn-code" onclick="grabCurl('/api/fb', 2)"><i class="fas fa-terminal"></i> cURL</button>
               </div>
               <div class="terminal-box">
                 <div class="terminal-nav">
@@ -612,7 +618,7 @@
           <div class="card-header-flex" onclick="toggleCard('api_3')">
             <div>
               <span class="badge-get">GET</span>
-              <div class="route-path">/song</div>
+              <div class="route-title-text"><i class="fas fa-music"></i> YouTube MP3 Converter</div>
             </div>
             <i class="fas fa-chevron-down arrow-icon"></i>
           </div>
@@ -621,8 +627,8 @@
               <label class="label-text">YouTube Audio URL</label>
               <input type="text" class="field-input" id="in_3" placeholder="Enter YouTube video link for MP3 conversion..." data-param="url">
               <div class="btn-flex-group">
-                <button class="action-btn btn-run" onclick="fireRequest('/song', 3)"><i class="fas fa-bolt"></i> Execute</button>
-                <button class="action-btn btn-code" onclick="grabCurl('/song', 3)"><i class="fas fa-terminal"></i> cURL</button>
+                <button class="action-btn btn-run" onclick="fireRequest('/api/ytmp3', 3)"><i class="fas fa-bolt"></i> Execute</button>
+                <button class="action-btn btn-code" onclick="grabCurl('/api/ytmp3', 3)"><i class="fas fa-terminal"></i> cURL</button>
               </div>
               <div class="terminal-box">
                 <div class="terminal-nav">
@@ -640,7 +646,7 @@
           <div class="card-header-flex" onclick="toggleCard('api_4')">
             <div>
               <span class="badge-get">GET</span>
-              <div class="route-path">/ytmp4</div>
+              <div class="route-title-text"><i class="fab fa-youtube"></i> YouTube MP4 Downloader</div>
             </div>
             <i class="fas fa-chevron-down arrow-icon"></i>
           </div>
@@ -649,8 +655,8 @@
               <label class="label-text">YouTube Video URL</label>
               <input type="text" class="field-input" id="in_4" placeholder="Enter YouTube link for MP4 stream download..." data-param="url">
               <div class="btn-flex-group">
-                <button class="action-btn btn-run" onclick="fireRequest('/ytmp4', 4)"><i class="fas fa-bolt"></i> Execute</button>
-                <button class="action-btn btn-code" onclick="grabCurl('/ytmp4', 4)"><i class="fas fa-terminal"></i> cURL</button>
+                <button class="action-btn btn-run" onclick="fireRequest('/api/ytmp4', 4)"><i class="fas fa-bolt"></i> Execute</button>
+                <button class="action-btn btn-code" onclick="grabCurl('/api/ytmp4', 4)"><i class="fas fa-terminal"></i> cURL</button>
               </div>
               <div class="terminal-box">
                 <div class="terminal-nav">
@@ -668,7 +674,7 @@
           <div class="card-header-flex" onclick="toggleCard('api_5')">
             <div>
               <span class="badge-get">GET</span>
-              <div class="route-path">/spo-search</div>
+              <div class="route-title-text"><i class="fas fa-search"></i> Spotify Audio Search</div>
             </div>
             <i class="fas fa-chevron-down arrow-icon"></i>
           </div>
@@ -677,8 +683,8 @@
               <label class="label-text">Query / Track Name</label>
               <input type="text" class="field-input" id="in_5" placeholder="Search track, album, artist parameters..." data-param="q">
               <div class="btn-flex-group">
-                <button class="action-btn btn-run" onclick="fireRequest('/spo-search', 5)"><i class="fas fa-bolt"></i> Execute</button>
-                <button class="action-btn btn-code" onclick="grabCurl('/spo-search', 5)"><i class="fas fa-terminal"></i> cURL</button>
+                <button class="action-btn btn-run" onclick="fireRequest('/api/spotify/search', 5)"><i class="fas fa-bolt"></i> Execute</button>
+                <button class="action-btn btn-code" onclick="grabCurl('/api/spotify/search', 5)"><i class="fas fa-terminal"></i> cURL</button>
               </div>
               <div class="terminal-box">
                 <div class="terminal-nav">
@@ -696,7 +702,7 @@
           <div class="card-header-flex" onclick="toggleCard('api_6')">
             <div>
               <span class="badge-get">GET</span>
-              <div class="route-path">/Spotify</div>
+              <div class="route-title-text"><i class="fab fa-spotify"></i> Spotify Downloader</div>
             </div>
             <i class="fas fa-chevron-down arrow-icon"></i>
           </div>
@@ -705,8 +711,8 @@
               <label class="label-text">Spotify Track Link</label>
               <input type="text" class="field-input" id="in_6" placeholder="Paste direct open.spotify.com URL link..." data-param="url">
               <div class="btn-flex-group">
-                <button class="action-btn btn-run" onclick="fireRequest('/Spotify', 6)"><i class="fas fa-bolt"></i> Execute</button>
-                <button class="action-btn btn-code" onclick="grabCurl('/Spotify', 6)"><i class="fas fa-terminal"></i> cURL</button>
+                <button class="action-btn btn-run" onclick="fireRequest('/api/spotify/dl', 6)"><i class="fas fa-bolt"></i> Execute</button>
+                <button class="action-btn btn-code" onclick="grabCurl('/api/spotify/dl', 6)"><i class="fas fa-terminal"></i> cURL</button>
               </div>
               <div class="terminal-box">
                 <div class="terminal-nav">
@@ -753,17 +759,6 @@
 
     <!-- High Performance Functional Logic -->
     <script>
-      // 🚀 আলাদা আলাদা এন্ডপয়েন্ট কনফিগারেশন (আপনার ইচ্ছা মতো যেকোনো ডোমেন বা সাব-ডোমেন লিংক বসাতে পারবেন)
-      const API_CONFIG = {
-        "/Dwnall": "https://api.example.com",       // All Downloader base url
-        "/insta": "https://insta.yourdomain.com",   // Instagram base url
-        "/Fb": "https://fb.anotherapi.xyz",         // Facebook base url
-        "/song": "https://yt-mp3.server.com",       // YouTube MP3 base url
-        "/ytmp4": "https://yt-mp4.server.com",      // YouTube MP4 base url
-        "/spo-search": "https://spotify.core.net",  // Spotify Search base url
-        "/Spotify": "https://spotify.core.net"     // Spotify Download base url
-      };
-
       // Single Trigger Card Toggle Mechanism
       function toggleCard(cardId) {
         const activeCard = document.getElementById(cardId);
@@ -781,33 +776,32 @@
         setTimeout(() => toast.classList.remove('show'), 2000);
       }
 
-      // Helper function to build final specific endpoint url
-      function buildFinalUrl(path, index) {
+      // Helper function to build final URL dynamically (Auto-Domain + Dynamic HTML Path + Dynamic Param)
+      function buildFinalUrl(customPath, index) {
         const fields = document.querySelectorAll(`#api_${index} .field-input`);
         const targetParams = {};
 
         fields.forEach(f => {
-          const key = f.dataset.param;
+          const key = f.dataset.param; // ইনপুট বক্সের data-param ডিটেক্ট করছে (যেমন: url, q)
           const val = f.value.trim();
           if (val) targetParams[key] = val;
         });
 
         const uriParams = Object.keys(targetParams).map(k => `${k}=${encodeURIComponent(targetParams[k])}`).join('&');
         
-        // সংশ্লিষ্ট পাথের নিজস্ব বেস ইউআরএল নিয়ে এন্ডপয়েন্ট তৈরি করা হচ্ছে
-        const baseUrl = API_CONFIG[path] || window.location.origin;
-        return baseUrl + path + (uriParams ? `?${uriParams}` : '');
+        // window.location.origin নিজে থেকেই আপনার লাইভ হোস্টিং ডোমেন লিংকটি নিয়ে নেবে
+        return window.location.origin + customPath + (uriParams ? `?${uriParams}` : '');
       }
 
       // Asynchronous Pipeline Fetch Call Handler
-      async function fireRequest(path, index) {
+      async function fireRequest(customPath, index) {
         const loader = document.getElementById(`load_${index}`);
         const consoleOut = document.getElementById(`out_${index}`);
         
-        const finalProcessingEndpoint = buildFinalUrl(path, index);
+        const finalProcessingEndpoint = buildFinalUrl(customPath, index);
 
         loader.style.display = 'inline-flex';
-        consoleOut.textContent = `Connecting to cluster sequence: ${API_CONFIG[path] || 'Local'}...\nResolving DNS & handshaking proxy server...`;
+        consoleOut.textContent = `Establishing secure connection proxy...\nTarget Host: ${window.location.origin}\nHandshaking with sequence...`;
         consoleOut.style.color = '#64748b';
 
         try {
@@ -819,14 +813,14 @@
           consoleOut.textContent = JSON.stringify({
             status: rawFeed.status,
             executionTime: `${t1 - t0}ms`,
-            engine: "Rabbit Kernel V2.5 Pro",
-            endpoint_fired: finalProcessingEndpoint,
+            engine: "Rabbit Kernel V2.9 Custom-Route Core",
+            request_uri: finalProcessingEndpoint,
             payload: computedJSON
           }, null, 2);
           
           consoleOut.style.color = rawFeed.ok ? '#22c55e' : '#ef4444';
         } catch (exception) {
-          consoleOut.textContent = `Cluster Sync Exception Log:\nStatus: Failed\nReason: ${exception.message}\nTarget: ${finalProcessingEndpoint}`;
+          consoleOut.textContent = `Cluster Sync Exception Log:\nStatus: Failed\nReason: ${exception.message}\nFailed Target: ${finalProcessingEndpoint}`;
           consoleOut.style.color = '#ef4444';
         } finally {
           loader.style.display = 'none';
@@ -834,8 +828,8 @@
       }
 
       // cURL Generator
-      function grabCurl(path, index) {
-        const finalUrl = buildFinalUrl(path, index);
+      function grabCurl(customPath, index) {
+        const finalUrl = buildFinalUrl(customPath, index);
         navigator.clipboard.writeText(`curl -X GET "${finalUrl}"`).then(() => {
           pushNotification('System cURL string copied!');
         });
