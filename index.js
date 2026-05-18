@@ -258,7 +258,7 @@ app.get("/api/insta2", async (req, res) => {
     const baseUrl = `${req.protocol}://${req.get("host")}`;
 
     const { data } = await axios.get(
-      `https://apiskeith.top/download/instadl?url=${encodeURIComponent(url)}`
+      `https://api-aswin-sparky.koyeb.app/api/downloader/igdl?url=${encodeURIComponent(url)}`
     );
 
     res.json({
@@ -267,7 +267,8 @@ app.get("/api/insta2", async (req, res) => {
       quality: data.quality,
       ext: data.ext,
       baseUrl,
-      url: data.url || data
+      thumbnail: data.data[0].thumbnail,
+      url: data.data[0].url
     });
 
   } catch (e) {
