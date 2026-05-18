@@ -1,6 +1,7 @@
 const express = require("express");
 const axios = require("axios");
-
+const cheerio = require("cheerio");
+const gis = require("g-i-s");
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -554,6 +555,136 @@ app.get("/api/pint", async (req, res) => {
     });
   }
 });
+
+
+
+// =======================
+// 🖼️ Google Image Search
+// =======================
+
+async function googleScrape(query, limit = 10) {
+
+  const { data } = await axios.get(
+    `https://www.google.com/search?tbm=isch&q=${encodeURIComponent(query)}`,
+    {
+      headers: {
+        "User-Agent": "Mozilla/5.0"
+      },
+      timeout: 5000
+    }
+  );
+
+  const $ = cheerio.load(data);
+
+  let results = [];
+
+  $("img").each((i, el) => {
+
+    const img = $(el).attr("src");
+
+    if (
+      img &&
+      img.startsWith("http") &&
+      !results.includes(img)
+    ) {
+      results.push(img);
+    }
+
+  });
+
+  return results.slice(0, limit);
+}
+
+
+// fallback
+function gisSearch(query, limit = 10) {
+
+  return new Promise((resolve, reject) => {
+
+    gis(query, (err, results) => {
+
+      if (err) return reject(err);
+
+      const data = results
+        .map(v => v.url)
+        .filter(v => v && v.startsWith("http"))
+        .slice(0, limit);
+
+      resolve(data);
+
+    });
+
+  });
+
+}
+
+
+
+app.get("/api/image", async (req, res) => {
+
+  try {
+
+    const { q, limit } = req.query;
+
+    if (!q) {
+      return res.status(400).json({
+        status: false,
+        creator: CREATOR,
+        message: "Query required"
+      });
+    }
+
+    const baseUrl = `${req.protocol}://${req.get("host")}`;
+
+    let result = [];
+    let source = "google-scrape";
+
+    try {
+
+      // fast method
+      result = await googleScrape(
+        q,
+        Number(limit) || 10
+      );
+
+      if (!result.length) {
+        throw new Error("No results");
+      }
+
+    } catch {
+
+      // fallback
+      source = "gis-fallback";
+
+      result = await gisSearch(
+        q,
+        Number(limit) || 10
+      );
+
+    }
+
+    res.json({
+      status: true,
+      creator: CREATOR,
+      baseUrl,
+      query: q,
+      source,
+      total: result.length,
+      result
+    });
+
+  } catch (e) {
+
+    res.status(500).json({
+      status: false,
+      creator: CREATOR,
+      error: e.message
+    });
+
+  }
+
+});
+
 
 
 
