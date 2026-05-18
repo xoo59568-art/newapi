@@ -669,33 +669,42 @@
           </div>
         </div>
 
-        <!-- 6. Spotify Search -->
-        <div class="custom-card" id="api_5">
-          <div class="card-header-flex" onclick="toggleCard('api_5')">
-            <div>
-              <span class="badge-get">GET</span>
-              <div class="route-title-text"><i class="fas fa-search"></i> Spotify Audio Search</div>
-            </div>
-            <i class="fas fa-chevron-down arrow-icon"></i>
-          </div>
-          <div class="expand-container">
-            <div class="expand-section">
-              <label class="label-text">Query / Track Name</label>
-              <input type="text" class="field-input" id="in_5" placeholder="Search track, album, artist parameters..." data-param="q">
-              <div class="btn-flex-group">
-                <button class="action-btn btn-run" onclick="fireRequest('/api/search/spotify', 5)"><i class="fas fa-bolt"></i> Execute</button>
-                <button class="action-btn btn-code" onclick="grabCurl('/api/search/spotify', 5)"><i class="fas fa-terminal"></i> cURL</button>
-              </div>
-              <div class="terminal-box">
-                <div class="terminal-nav">
-                  <div class="terminal-title"><span id="load_5" style="display:none;"><span class="mini-spin"></span></span>Console</div>
-                  <button class="tool-btn" onclick="copyStdout(5)"><i class="fas fa-copy"></i></button>
-                </div>
-                <pre class="terminal-body" id="out_5">Idle thread. Ready for deployment.</pre>
-              </div>
-            </div>
-          </div>
+        <!-- 6. Spotify Search (Updated with Query & Limit Options) -->
+<div class="custom-card" id="api_5">
+  <div class="card-header-flex" onclick="toggleCard('api_5')">
+    <div>
+      <span class="badge-get">GET</span>
+      <div class="route-title-text"><i class="fas fa-search"></i> Spotify Audio Search</div>
+    </div>
+    <i class="fas fa-chevron-down arrow-icon"></i>
+  </div>
+  <div class="expand-container">
+    <div class="expand-section">
+      
+      <!-- 🌟 ১ নম্বর ইনপুট: ট্র্যাক বা গানের নাম (Query) -->
+      <label class="label-text">Enter Name / Query</label>
+      <input type="text" class="field-input" id="in_5_q" placeholder="Search track, album, artist parameters..." data-param="q" style="margin-bottom: 1rem;">
+      
+      <!-- 🌟 ২ নম্বর ইনপুট: রেজাল্টের সংখ্যা (Limit) -->
+      <label class="label-text">Search Limit</label>
+      <input type="number" class="field-input" id="in_5_limit" placeholder="Enter result limit (e.g. 10)..." data-param="limit" value="10">
+      
+      <div class="btn-flex-group">
+        <!-- 🌟 এখানে পাথ বদলে আপনার রিকোয়েস্ট অনুযায়ী /search/spotify করে দেওয়া হয়েছে -->
+        <button class="action-btn btn-run" onclick="fireRequest('/search/spotify', 5)"><i class="fas fa-bolt"></i> Execute</button>
+        <button class="action-btn btn-code" onclick="grabCurl('/search/spotify', 5)"><i class="fas fa-terminal"></i> cURL</button>
+      </div>
+      
+      <div class="terminal-box">
+        <div class="terminal-nav">
+          <div class="terminal-title"><span id="load_5" style="display:none;"><span class="mini-spin"></span></span>Console</div>
+          <button class="tool-btn" onclick="copyStdout(5)"><i class="fas fa-copy"></i></button>
         </div>
+        <pre class="terminal-body" id="out_5">Idle thread. Ready for deployment.</pre>
+      </div>
+    </div>
+  </div>
+</div>
 
         <!-- 7. Spotify Download -->
         <div class="custom-card" id="api_6">
