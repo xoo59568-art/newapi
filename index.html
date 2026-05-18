@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rabbit API Dashboard</title>
+    <!-- FontAwesome Premium CDN for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+      :root {
+        --primary: #a855f7;
+        --primary-glow: rgba(168, 85, 247, 0.25);
+        --cyan: #06b6d4;
+        --dark-bg: #020617;
+        --card-bg: rgba(15, 23, 42, 0.35);
+        --card-border: rgba(255, 255, 255, 0.05);
+        --text-main: #f8fafc;
+        --text-muted: #64748b;
+        --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        background-color: var(--dark-bg);
+        color: var(--text-main);
+        min-height: 100vh;
+        overflow-x: hidden;
+        background-image: 
+          radial-gradient(circle at 80% 0%, rgba(168, 85, 247, 0.12) 0%, transparent 40%),
+          radial-gradient(circle at 20% 100%, rgba(6, 182, 212, 0.08) 0%, transparent 40%);
+        background-attachment: fixed;
+      }
+
+      /* Performance Boost Grid Lines */
+      body::before {
+        content: '';
+        position: fixed;
+        top: 0; left: 0; width: 100%; height: 100%;
+        background-image: linear-gradient(rgba(255, 255, 255, 0.003) 1px, transparent 1px),
+                          linear-gradient(90deg, rgba(255, 255, 255, 0.003) 1px, transparent 1px);
+        background-size: 40px 40px;
+        z-index: -1;
+        pointer-events: none;
+      }
+
+      /* Header Styling */
+      .header {
+        padding: 4rem 1.5rem 2rem;
+        text-align: center;
+      }
+
+      .logo-wrapper {
+        display: inline-flex;
+        align-items: center;
+        gap: 1rem;
+        background: rgba(255, 255, 255, 0.02);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        padding: 0.6rem 2rem;
+        border-radius: 100px;
+        border: 1px solid var(--card-border);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        margin-bottom: 1.5rem;
+        transition: var(--transition);
+      }
+
+      .logo-wrapper:hover {
+        border-color: rgba(168, 85, 247, 0.3);
+        box-shadow: 0 0 25px var(--primary-glow);
+      }
+
+      .logo-icon {
+        font-size: 2rem;
+        background: linear-gradient(135deg, var(--primary) 0%, var(--cyan) 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+
+      .logo-text {
+        font-size: 1.8rem;
+        font-weight: 700;
+        letter-spacing: 2px;
+        color: #ffffff;
+      }
+
+      .tagline {
+        font-size: 1rem;
+        color: #94a3b8;
+        margin-bottom: 2.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+      }
+
+      .status-pulse {
+        width: 8px;
+        height: 8px;
+        background-color: #10b981;
+        border-radius: 50%;
+        display: inline-block;
+        box-shadow: 0 0 10px #10b981;
+        animation: pulse 2s infinite;
+      }
+
+      @keyframes pulse {
+        0% { transform: scale(0.95); opacity: 0.5; }
+        70% { transform: scale(1); opacity: 1; box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
+        100% { transform: scale(0.95); opacity: 0.5; }
+      }
+
+      /* Counter Grid */
+      .stats-panel {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 1.25rem;
+        max-width: 900px;
+        margin: 0 auto;
+      }
+
+      .stat-item {
+        background: var(--card-bg);
+        border: 1px solid var(--card-border);
+        padding: 1.25rem;
+        border-radius: 20px;
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        transition: var(--transition);
+      }
+
+      .stat-item:hover {
+        transform: translateY(-2px);
+        border-color: rgba(255,255,255,0.1);
+        background: rgba(15, 23, 42, 0.5);
+      }
+
+      .stat-val {
+        font-size: 2rem;
+        font-weight: 700;
+        font-family: 'JetBrains Mono', monospace;
+        color: #ffffff;
+      }
+
+      .stat-lbl {
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-top: 0.2rem;
+      }
+
+      /* Container */
+      .main-content {
+        max-width: 1300px;
+        margin: 0 auto;
+        padding: 3rem 1.5rem;
+      }
+
+      .wrapper-title {
+        font-size: 1.4rem;
+        font-weight: 600;
+        margin-bottom: 2rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+
+      .wrapper-title i {
+        color: var(--primary);
+      }
+
+      /* Core Route Grid */
+      .cards-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+        gap: 1.5rem;
+      }
+
+      .custom-card {
+        background: var(--card-bg);
+        border: 1px solid var(--card-border);
+        border-radius: 24px;
+        padding: 1.5rem;
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        transition: var(--transition);
+        will-change: transform, border-color; /* Smooth performance trigger */
+      }
+
+      .custom-card:hover {
+        border-color: rgba(168, 85, 247, 0.2);
+        background: rgba(15, 23, 42, 0.45);
+      }
+
+      .custom-card.active {
+        border-color: rgba(168, 85, 247, 0.35);
+        box-shadow: 0 15px 35px rgba(0,0,0,0.4);
+      }
+
+      .card-header-flex {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        cursor: pointer;
+      }
+
+      .badge-get {
+        background: rgba(6, 182, 212, 0.08);
+        color: var(--cyan);
+        border: 1px solid rgba(6, 182, 212, 0.12);
+        padding: 0.25rem 0.75rem;
+        border-radius: 8px;
+        font-size: 0.7rem;
+        font-weight: 700;
+        font-family: 'JetBrains Mono', monospace;
+        display: inline-block;
+        margin-bottom: 0.5rem;
+      }
+
+      .route-path {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 1.1rem;
+        color: #f1f5f9;
+        font-weight: 500;
+      }
+
+      .arrow-icon {
+        color: #475569;
+        font-size: 0.9rem;
+        background: rgba(255, 255, 255, 0.02);
+        padding: 0.6rem;
+        border-radius: 50%;
+        transition: var(--transition);
+      }
+
+      .custom-card.active .arrow-icon {
+        transform: rotate(180deg);
+        background: var(--primary);
+        color: white;
+      }
+
+      /* Smooth Expand Animation */
+      .expand-section {
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s linear;
+        opacity: 0;
+      }
+
+      .custom-card.active .expand-section {
+        max-height: 800px;
+        margin-top: 1.5rem;
+        opacity: 1;
+        border-top: 1px solid rgba(255, 255, 255, 0.05);
+        padding-top: 1.25rem;
+      }
+
+      .label-text {
+        display: block;
+        font-size: 0.75rem;
+        color: #94a3b8;
+        margin-bottom: 0.4rem;
+        font-weight: 600;
+        font-family: 'JetBrains Mono', monospace;
+      }
+
+      .field-input {
+        width: 100%;
+        background: rgba(0, 0, 0, 0.3);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: 12px;
+        padding: 0.9rem 1.1rem;
+        color: white;
+        font-size: 0.9rem;
+        font-family: inherit;
+        transition: var(--transition);
+      }
+
+      .field-input:focus {
+        outline: none;
+        border-color: var(--primary);
+        background: rgba(0, 0, 0, 0.5);
+      }
+
+      /* Control Buttons */
+      .btn-flex-group {
+        display: flex;
+        gap: 0.75rem;
+        margin-top: 1.25rem;
+      }
+
+      .action-btn {
+        padding: 0.85rem 1.1rem;
+        border-radius: 12px;
+        font-weight: 600;
+        font-size: 0.9rem;
+        font-family: inherit;
+        border: none;
+        cursor: pointer;
+        transition: var(--transition);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        flex: 1;
+      }
+
+      .btn-run {
+        background: linear-gradient(135deg, var(--primary) 0%, #b55fe6 100%);
+        color: white;
+      }
+
+      .btn-run:hover {
+        box-shadow: 0 8px 20px rgba(168, 85, 247, 0.25);
+      }
+
+      .btn-code {
+        background: rgba(255, 255, 255, 0.03);
+        color: #cbd5e1;
+        border: 1px solid rgba(255, 255, 255, 0.06);
+      }
+
+      .btn-code:hover {
+        background: rgba(255, 255, 255, 0.06);
+        color: white;
+      }
+
+      /* Console / Output Terminal */
+      .terminal-box {
+        margin-top: 1.25rem;
+        border-radius: 16px;
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        background: rgba(0, 0, 0, 0.4);
+      }
+
+      .terminal-nav {
+        background: rgba(0, 0, 0, 0.2);
+        padding: 0.75rem 1.1rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      }
+
+      .terminal-title {
+        font-size: 0.8rem;
+        color: #64748b;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+
+      .tool-btn {
+        background: transparent;
+        border: none;
+        color: #475569;
+        font-size: 0.85rem;
+        cursor: pointer;
+        padding: 0.25rem;
+        transition: var(--transition);
+      }
+
+      .tool-btn:hover { color: #cbd5e1; }
+
+      .terminal-body {
+        padding: 1.1rem;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.8rem;
+        max-height: 220px;
+        overflow-y: auto;
+        white-space: pre-wrap;
+        color: #64748b;
+        line-height: 1.5;
+      }
+
+      .mini-spin {
+        display: inline-block;
+        width: 12px;
+        height: 12px;
+        border: 2px solid rgba(255, 255, 255, 0.1);
+        border-radius: 50%;
+        border-top-color: var(--cyan);
+        animation: rot 0.8s linear infinite;
+        margin-right: 0.4rem;
+      }
+
+      @keyframes rot { to { transform: rotate(360deg); } }
+
+      /* Realtime System Toast Micro-Alerts */
+      .toast-msg {
+        position: fixed;
+        bottom: 25px;
+        right: 25px;
+        background: #0f172a;
+        border: 1px solid rgba(168, 85, 247, 0.3);
+        color: white;
+        padding: 0.9rem 1.4rem;
+        border-radius: 12px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        z-index: 9999;
+        font-size: 0.9rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        transform: translateY(80px);
+        opacity: 0;
+        transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.1), opacity 0.2s ease;
+      }
+
+      .toast-msg.show {
+        transform: translateY(0);
+        opacity: 1;
+      }
+
+      /* Premium Footer Blueprint */
+      .premium-footer {
+        text-align: center;
+        padding: 4rem 1.5rem;
+        background: rgba(2, 4, 8, 0.5);
+        border-top: 1px solid rgba(255, 255, 255, 0.03);
+      }
+
+      .dev-badge-pnl {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.75rem;
+        background: rgba(255, 255, 255, 0.01);
+        padding: 0.5rem 1.5rem;
+        border-radius: 100px;
+        border: 1px solid rgba(255,255,255,0.03);
+        margin-bottom: 1.25rem;
+      }
+
+      .avatar-ring {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--primary) 0%, var(--cyan) 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.8rem;
+        color: white;
+      }
+
+      .dev-name { font-size: 0.9rem; font-weight: 600; color: #cbd5e1; }
+      .footer-cr { font-size: 0.8rem; color: #475569; margin-bottom: 1.5rem; }
+      .social-flex { display: flex; justify-content: center; gap: 1rem; }
+
+      .icon-circle-link {
+        color: #475569;
+        font-size: 1.2rem;
+        transition: var(--transition);
+        background: rgba(255, 255, 255, 0.01);
+        width: 46px;
+        height: 46px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        border: 1px solid rgba(255, 255, 255, 0.03);
+      }
+
+      .icon-circle-link:hover { color: white; transform: translateY(-2px); }
+      .icon-circle-link.whatsapp-color:hover { background: #22c55e; border-color: transparent; box-shadow: 0 0 15px rgba(34, 197, 94, 0.2); }
+      .icon-circle-link.instagram-color:hover { background: linear-gradient(45deg, #f09433 0%, #dc2743 50%, #bc1888 100%); border-color: transparent; box-shadow: 0 0 15px rgba(220, 39, 67, 0.2); }
+
+      /* Responsive Rules */
+      @media (max-width: 768px) {
+        .stats-panel { grid-template-columns: repeat(2, 1fr); gap: 0.75rem; }
+        .cards-grid { grid-template-columns: 1fr; }
+        .header { padding: 3rem 1rem 1rem; }
+      }
+    </style>
+</head>
+<body>
+
+    <!-- Header Panel -->
+    <header class="header">
+      <div class="logo-wrapper">
+        <i class="fas fa-rabbit logo-icon"></i>
+        <h1 class="logo-text">RABBIT API</h1>
+      </div>
+      <p class="tagline"><span class="status-pulse"></span> Production Pipeline Monitoring Interface</p>
+
+      <div class="stats-panel">
+        <div class="stat-item">
+          <div class="stat-val">22</div>
+          <div class="stat-lbl">Services</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-val">Active</div>
+          <div class="stat-lbl">Gateway</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-val">GET</div>
+          <div class="stat-lbl">Method</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-val">0ms</div>
+          <div class="stat-lbl">Lag Rate</div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Service Interface -->
+    <main class="main-content">
+      <h2 class="wrapper-title"><i class="fas fa-microchip"></i> Operations Control</h2>
+
+      <div class="cards-grid">
+        
+        <!-- 1. All Downloader -->
+        <div class="custom-card active" id="api_0">
+          <div class="card-header-flex" onclick="toggleCard('api_0')">
+            <div>
+              <span class="badge-get">GET</span>
+              <div class="route-path">/Dwnall</div>
+            </div>
+            <i class="fas fa-chevron-down arrow-icon"></i>
+          </div>
+          <div class="expand-section">
+            <label class="label-text">Media Source URL</label>
+            <input type="text" class="field-input" id="in_0" placeholder="Enter universal media url target..." data-param="url">
+            <div class="btn-flex-group">
+              <button class="action-btn btn-run" onclick="fireRequest('/Dwnall', 0)"><i class="fas fa-bolt"></i> Execute</button>
+              <button class="action-btn btn-code" onclick="grabCurl('/Dwnall', 0)"><i class="fas fa-terminal"></i> cURL</button>
+            </div>
+            <div class="terminal-box">
+              <div class="terminal-nav">
+                <div class="terminal-title"><span id="load_0" style="display:none;"><span class="mini-spin"></span></span>Console</div>
+                <button class="tool-btn" onclick="copyStdout(0)"><i class="fas fa-copy"></i></button>
+              </div>
+              <pre class="terminal-body" id="out_0">Idle thread. Ready for deployment.</pre>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. Instagram Downloader -->
+        <div class="custom-card" id="api_1">
+          <div class="card-header-flex" onclick="toggleCard('api_1')">
+            <div>
+              <span class="badge-get">GET</span>
+              <div class="route-path">/insta</div>
+            </div>
+            <i class="fas fa-chevron-down arrow-icon"></i>
+          </div>
+          <div class="expand-section">
+            <label class="label-text">Instagram URL</label>
+            <input type="text" class="field-input" id="in_1" placeholder="Paste Instagram post, reel or IGTV link..." data-param="url">
+            <div class="btn-flex-group">
+              <button class="action-btn btn-run" onclick="fireRequest('/insta', 1)"><i class="fas fa-bolt"></i> Execute</button>
+              <button class="action-btn btn-code" onclick="grabCurl('/insta', 1)"><i class="fas fa-terminal"></i> cURL</button>
+            </div>
+            <div class="terminal-box">
+              <div class="terminal-nav">
+                <div class="terminal-title"><span id="load_1" style="display:none;"><span class="mini-spin"></span></span>Console</div>
+                <button class="tool-btn" onclick="copyStdout(1)"><i class="fas fa-copy"></i></button>
+              </div>
+              <pre class="terminal-body" id="out_1">Idle thread. Ready for deployment.</pre>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. Facebook Downloader -->
+        <div class="custom-card" id="api_2">
+          <div class="card-header-flex" onclick="toggleCard('api_2')">
+            <div>
+              <span class="badge-get">GET</span>
+              <div class="route-path">/Fb</div>
+            </div>
+            <i class="fas fa-chevron-down arrow-icon"></i>
+          </div>
+          <div class="expand-section">
+            <label class="label-text">Facebook Video URL</label>
+            <input type="text" class="field-input" id="in_2" placeholder="Enter Facebook video/reel URL target..." data-param="url">
+            <div class="btn-flex-group">
+              <button class="action-btn btn-run" onclick="fireRequest('/Fb', 2)"><i class="fas fa-bolt"></i> Execute</button>
+              <button class="action-btn btn-code" onclick="grabCurl('/Fb', 2)"><i class="fas fa-terminal"></i> cURL</button>
+            </div>
+            <div class="terminal-box">
+              <div class="terminal-nav">
+                <div class="terminal-title"><span id="load_2" style="display:none;"><span class="mini-spin"></span></span>Console</div>
+                <button class="tool-btn" onclick="copyStdout(2)"><i class="fas fa-copy"></i></button>
+              </div>
+              <pre class="terminal-body" id="out_2">Idle thread. Ready for deployment.</pre>
+            </div>
+          </div>
+        </div>
+
+        <!-- 4. YouTube MP3 -->
+        <div class="custom-card" id="api_3">
+          <div class="card-header-flex" onclick="toggleCard('api_3')">
+            <div>
+              <span class="badge-get">GET</span>
+              <div class="route-path">/song</div>
+            </div>
+            <i class="fas fa-chevron-down arrow-icon"></i>
+          </div>
+          <div class="expand-section">
+            <label class="label-text">YouTube Audio URL</label>
+            <input type="text" class="field-input" id="in_3" placeholder="Enter YouTube video link for MP3 conversion..." data-param="url">
+            <div class="btn-flex-group">
+              <button class="action-btn btn-run" onclick="fireRequest('/song', 3)"><i class="fas fa-bolt"></i> Execute</button>
+              <button class="action-btn btn-code" onclick="grabCurl('/song', 3)"><i class="fas fa-terminal"></i> cURL</button>
+            </div>
+            <div class="terminal-box">
+              <div class="terminal-nav">
+                <div class="terminal-title"><span id="load_3" style="display:none;"><span class="mini-spin"></span></span>Console</div>
+                <button class="tool-btn" onclick="copyStdout(3)"><i class="fas fa-copy"></i></button>
+              </div>
+              <pre class="terminal-body" id="out_3">Idle thread. Ready for deployment.</pre>
+            </div>
+          </div>
+        </div>
+
+        <!-- 5. YouTube MP4 -->
+        <div class="custom-card" id="api_4">
+          <div class="card-header-flex" onclick="toggleCard('api_4')">
+            <div>
+              <span class="badge-get">GET</span>
+              <div class="route-path">/ytmp4</div>
+            </div>
+            <i class="fas fa-chevron-down arrow-icon"></i>
+          </div>
+          <div class="expand-section">
+            <label class="label-text">YouTube Video URL</label>
+            <input type="text" class="field-input" id="in_4" placeholder="Enter YouTube link for MP4 stream download..." data-param="url">
+            <div class="btn-flex-group">
+              <button class="action-btn btn-run" onclick="fireRequest('/ytmp4', 4)"><i class="fas fa-bolt"></i> Execute</button>
+              <button class="action-btn btn-code" onclick="grabCurl('/ytmp4', 4)"><i class="fas fa-terminal"></i> cURL</button>
+            </div>
+            <div class="terminal-box">
+              <div class="terminal-nav">
+                <div class="terminal-title"><span id="load_4" style="display:none;"><span class="mini-spin"></span></span>Console</div>
+                <button class="tool-btn" onclick="copyStdout(4)"><i class="fas fa-copy"></i></button>
+              </div>
+              <pre class="terminal-body" id="out_4">Idle thread. Ready for deployment.</pre>
+            </div>
+          </div>
+        </div>
+
+        <!-- 6. Spotify Search -->
+        <div class="custom-card" id="api_5">
+          <div class="card-header-flex" onclick="toggleCard('api_5')">
+            <div>
+              <span class="badge-get">GET</span>
+              <div class="route-path">/spo-sarch</div>
+            </div>
+            <i class="fas fa-chevron-down arrow-icon"></i>
+          </div>
+          <div class="expand-section">
+            <label class="label-text">Query / Track Name</label>
+            <input type="text" class="field-input" id="in_5" placeholder="Search track, album, artist parameters..." data-param="q">
+            <div class="btn-flex-group">
+              <button class="action-btn btn-run" onclick="fireRequest('/spo-sarch', 5)"><i class="fas fa-bolt"></i> Execute</button>
+              <button class="action-btn btn-code" onclick="grabCurl('/spo-sarch', 5)"><i class="fas fa-terminal"></i> cURL</button>
+            </div>
+            <div class="terminal-box">
+              <div class="terminal-nav">
+                <div class="terminal-title"><span id="load_5" style="display:none;"><span class="mini-spin"></span></span>Console</div>
+                <button class="tool-btn" onclick="copyStdout(5)"><i class="fas fa-copy"></i></button>
+              </div>
+              <pre class="terminal-body" id="out_5">Idle thread. Ready for deployment.</pre>
+            </div>
+          </div>
+        </div>
+
+        <!-- 7. Spotify Download -->
+        <div class="custom-card" id="api_6">
+          <div class="card-header-flex" onclick="toggleCard('api_6')">
+            <div>
+              <span class="badge-get">GET</span>
+              <div class="route-path">/Spotify</div>
+            </div>
+            <i class="fas fa-chevron-down arrow-icon"></i>
+          </div>
+          <div class="expand-section">
+            <label class="label-text">Spotify Track Link</label>
+            <input type="text" class="field-input" id="in_6" placeholder="Paste direct open.spotify.com URL link..." data-param="url">
+            <div class="btn-flex-group">
+              <button class="action-btn btn-run" onclick="fireRequest('/Spotify', 6)"><i class="fas fa-bolt"></i> Execute</button>
+              <button class="action-btn btn-code" onclick="grabCurl('/Spotify', 6)"><i class="fas fa-terminal"></i> cURL</button>
+            </div>
+            <div class="terminal-box">
+              <div class="terminal-nav">
+                <div class="terminal-title"><span id="load_6" style="display:none;"><span class="mini-spin"></span></span>Console</div>
+                <button class="tool-btn" onclick="copyStdout(6)"><i class="fas fa-copy"></i></button>
+              </div>
+              <pre class="terminal-body" id="out_6">Idle thread. Ready for deployment.</pre>
+            </div>
+          </div>
+        </div>
+
+        <!-- 8. Placeholder: Incoming Endpoints -->
+        <div class="custom-card" style="border-style: dashed; border-color: rgba(255,255,255,0.15); display: flex; align-items: center; justify-content: center; text-align: center; min-height: 110px;">
+          <div>
+            <i class="fas fa-folder-plus" style="color:var(--text-muted); font-size:1.5rem; margin-bottom:0.5rem;"></i>
+            <div style="color:var(--text-muted); font-size:0.9rem; font-weight:500;">More Core Stacks Coming Soon</div>
+          </div>
+        </div>
+
+      </div>
+    </main>
+
+    <!-- System Notification Micro-Toast -->
+    <div id="toast" class="toast-msg"></div>
+
+    <!-- Layout Footer -->
+    <footer class="premium-footer">
+      <div class="dev-badge-pnl">
+        <div class="avatar-ring"><i class="fas fa-rabbit"></i></div>
+        <div class="dev-name">Rabbit API Infrastructure</div>
+      </div>
+      <div class="footer-cr">© 2026 Rabbit API Core. All system clusters active.</div>
+      
+      <div class="social-flex">
+        <a href="https://wa.me/917439382677" target="_blank" class="icon-circle-link whatsapp-color">
+          <i class="fab fa-whatsapp"></i>
+        </a>
+        <a href="https://instagram.com/sreejan_edit" target="_blank" class="icon-circle-link instagram-color">
+          <i class="fab fa-instagram"></i>
+        </a>
+      </div>
+    </footer>
+
+    <!-- High Performance Functional Logic -->
+    <script>
+      // Single Trigger Card Toggle Mechanism
+      function toggleCard(cardId) {
+        const activeCard = document.getElementById(cardId);
+        const isActive = activeCard.classList.contains('active');
+        
+        document.querySelectorAll('.custom-card').forEach(c => c.classList.remove('active'));
+        if(!isActive) activeCard.classList.add('active');
+      }
+
+      // Memory Efficient System Notifications 
+      function pushNotification(msg) {
+        const toast = document.getElementById('toast');
+        toast.innerHTML = `<i class="fas fa-bolt" style="color:#a855f7"></i> <span>${msg}</span>`;
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 2000);
+      }
+
+      // Asynchronous Pipeline Fetch Call Handler
+      async function fireRequest(path, index) {
+        const loader = document.getElementById(`load_${index}`);
+        const consoleOut = document.getElementById(`out_${index}`);
+        const fields = document.querySelectorAll(`#api_${index} .field-input`);
+        const targetParams = {};
+
+        fields.forEach(f => {
+          const key = f.dataset.param;
+          const val = f.value.trim();
+          if (val) targetParams[key] = val;
+        });
+
+        const uriParams = Object.keys(targetParams).map(k => `${k}=${encodeURIComponent(targetParams[k])}`).join('&');
+        const processingEndpoint = window.location.origin + path + (uriParams ? `?${uriParams}` : '');
+
+        loader.style.display = 'inline-flex';
+        consoleOut.textContent = "Resolving DNS & handshaking proxy cluster server data...";
+        consoleOut.style.color = '#64748b';
+
+        try {
+          const t0 = Date.now();
+          const rawFeed = await fetch(processingEndpoint);
+          const computedJSON = await rawFeed.json();
+          const t1 = Date.now();
+
+          consoleOut.textContent = JSON.stringify({
+            status: rawFeed.status,
+            executionTime: `${t1 - t0}ms`,
+            engine: "Rabbit Kernel V2",
+            payload: computedJSON
+          }, null, 2);
+          
+          consoleOut.style.color = rawFeed.ok ? '#22c55e' : '#ef4444';
+        } catch (exception) {
+          consoleOut.textContent = `Cluster Sync Exception Log: ${exception.message}`;
+          consoleOut.style.color = '#ef4444';
+        } finally {
+          loader.style.display = 'none';
+        }
+      }
+
+      // cURL Generator
+      function grabCurl(path, index) {
+        const fields = document.querySelectorAll(`#api_${index} .field-input`);
+        const targetParams = {};
+        fields.forEach(f => {
+          const key = f.dataset.param;
+          const val = f.value.trim();
+          if (val) targetParams[key] = val;
+        });
+        const uriParams = Object.keys(targetParams).map(k => `${k}=${encodeURIComponent(targetParams[k])}`).join('&');
+        const finalUrl = window.location.origin + path + (uriParams ? `?${uriParams}` : '');
+        
+        navigator.clipboard.writeText(`curl -X GET "${finalUrl}"`).then(() => {
+          pushNotification('System cURL string copied!');
+        });
+      }
+
+      // Copy stdout Terminal Data
+      function copyStdout(index) {
+        const currentData = document.getElementById(`out_${index}`).textContent;
+        navigator.clipboard.writeText(currentData).then(() => {
+          pushNotification('Terminal stdout string copied!');
+        });
+      }
+    </script>
+</body>
+</html>
