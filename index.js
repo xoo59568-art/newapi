@@ -10,12 +10,9 @@ const CREATOR = "Sreejanxmd";
 
 // ✅ Home
 app.get("/", (req, res) => {
-  res.json({
-    status: true,
-    message: "Neuro API Running 🚀",
-    creator: CREATOR
-  });
+  res.sendFile(__dirname + "/index.html");
 });
+
 
 
 // =======================
