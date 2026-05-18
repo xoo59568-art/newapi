@@ -661,8 +661,8 @@
             <label class="label-text">Query / Track Name</label>
             <input type="text" class="field-input" id="in_5" placeholder="Search track, album, artist parameters..." data-param="q">
             <div class="btn-flex-group">
-              <button class="action-btn btn-run" onclick="fireRequest('/spo-sarch', 5)"><i class="fas fa-bolt"></i> Execute</button>
-              <button class="action-btn btn-code" onclick="grabCurl('/spo-sarch', 5)"><i class="fas fa-terminal"></i> cURL</button>
+              <button class="action-btn btn-run" onclick="fireRequest('/spotify-sarch', 5)"><i class="fas fa-bolt"></i> Execute</button>
+              <button class="action-btn btn-code" onclick="grabCurl('/spotify-sarch', 5)"><i class="fas fa-terminal"></i> cURL</button>
             </div>
             <div class="terminal-box">
               <div class="terminal-nav">
@@ -765,7 +765,7 @@
         });
 
         const uriParams = Object.keys(targetParams).map(k => `${k}=${encodeURIComponent(targetParams[k])}`).join('&');
-        const processingEndpoint = window.location.origin + path + (uriParams ? `?${uriParams}` : '');
+const processingEndpoint = window.location.origin + '/api' + path + (uriParams ? `?${uriParams}` : '');
 
         loader.style.display = 'inline-flex';
         consoleOut.textContent = "Resolving DNS & handshaking proxy cluster server data...";
