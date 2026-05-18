@@ -73,6 +73,37 @@ app.get("/api/insta", async (req, res) => {
 });
 
 
+
+//Faceb
+
+app.get("/api/fb", async (req, res) => {
+  try {
+    const { url } = req.query;
+    if (!url) return res.status(400).json({ status: false, creator: CREATOR });
+
+    const baseUrl = `${req.protocol}://${req.get("host")}`;
+
+    const { data } = await axios.get(
+      `https://nayan-video-downloader.vercel.app/alldown?url=${encodeURIComponent(url)}`
+    );
+
+    res.json({
+      status: true,
+      creator: CREATOR,
+      baseUrl,
+      title: data.data.title,
+      thumbnail: data.data.thumbnail,
+  sd: data.data.low,
+  hd: data.data.high
+    });
+
+  } catch {
+    res.json({ status: false, creator: CREATOR });
+  }
+});
+
+
+
 //fb3
 
 app.get("/api/fb3", async (req, res) => {
