@@ -406,8 +406,55 @@ app.get("/api/spotify", async (req, res) => {
 
 
 
-//Pinterest 
+
+// =======================
+// 🎵 Pinterest Download 
+// =======================
 app.get("/api/pinterest", async (req, res) => {
+  try {
+    const { url } = req.query;
+
+    // url check
+    if (!url) {
+      return res.status(400).json({
+        status: false,
+        creator: CREATOR,
+        message: "Pinterest URL is required"
+      });
+    }
+
+    const baseUrl = `${req.protocol}://${req.get("host")}`;
+
+    // fetch spotify download
+    const { data } = await axios.get(
+      `https://jerrycoder.oggyapi.workers.dev/down/pinterest?url=${encodeURIComponent(url)}`
+    );
+
+    // response
+    res.json({
+      status: true,
+      creator: CREATOR,
+      baseUrl,
+      title: data.title,
+      author: data.author,
+      thumbnail: data.thumbnail,
+      url: data.url
+    });
+
+  } catch (err) {
+    console.log(err);
+
+    res.status(500).json({
+      status: false,
+      creator: CREATOR,
+      message: "Internal Server Error"
+    });
+  }
+});
+
+
+//Pinterest 
+app.get("/api/pint", async (req, res) => {
   try {
     const { url } = req.query;
 
