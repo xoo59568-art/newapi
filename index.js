@@ -358,6 +358,54 @@ app.get("/search/spotify", async (req, res) => {
 
 
 
+// =======================
+// 🎵 Spotify Download
+// =======================
+app.get("/down/spotify", async (req, res) => {
+  try {
+    const { url } = req.query;
+
+    // url check
+    if (!url) {
+      return res.status(400).json({
+        status: false,
+        creator: CREATOR,
+        message: "Spotify URL is required"
+      });
+    }
+
+    const baseUrl = `${req.protocol}://${req.get("host")}`;
+
+    // fetch spotify download
+    const { data } = await axios.get(
+      `https://jerrycoder.oggyapi.workers.dev/down/spotify?url=${encodeURIComponent(url)}`
+    );
+
+    // response
+    res.json({
+      status: true,
+      creator: CREATOR,
+      baseUrl,
+      title: data.title,
+      artist: data.artist,
+      duration: data.duration,
+      thumbnail: data.thumbnail,
+      url: data.download_link
+    });
+
+  } catch (err) {
+    console.log(err);
+
+    res.status(500).json({
+      status: false,
+      creator: CREATOR,
+      message: "Internal Server Error"
+    });
+  }
+});
+
+
+
 //Pinterest 
 app.get("/api/pinterest", async (req, res) => {
   try {
