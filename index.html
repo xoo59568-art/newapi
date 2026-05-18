@@ -621,6 +621,41 @@
           </div>
         </div>
 
+        <div class="custom-card" id="api_9">
+          <div class="card-header-flex" onclick="toggleCard('api_9')">
+            <div>
+              <span class="badge-get">GET</span>
+              <div class="route-title-text"><i class="fab fa-youtube"></i> YouTube Search</div>
+            </div>
+            <i class="fas fa-chevron-down arrow-icon"></i>
+          </div>
+          <div class="expand-container">
+            <div class="expand-section">
+              
+              <label class="label-text">Enter Name / Query</label>
+              <input type="text" class="field-input" id="in_9_q" placeholder="Search video, music, shorts parameters..." data-param="q" style="margin-bottom: 1rem;">
+              
+              <label class="label-text">Search Limit</label>
+              <input type="number" class="field-input" id="in_8_limit" placeholder="Enter result limit (e.g. 15)..." data-param="limit" value="15">
+              
+              <div class="btn-flex-group">
+                <button class="action-btn btn-run" onclick="fireRequest('/search/youtube', 9)"><i class="fas fa-bolt"></i> Execute</button>
+                <button class="action-btn btn-code" onclick="grabCurl('/search/youtube', 9)"><i class="fas fa-terminal"></i> cURL</button>
+              </div>
+              
+              <div class="terminal-box">
+                <div class="terminal-nav">
+                  <div class="terminal-title"><span id="load_9" style="display:none;"><span class="mini-spin"></span></span>Console</div>
+                  <button class="tool-btn" onclick="copyStdout(9)"><i class="fas fa-copy"></i></button>
+                </div>
+                <pre class="terminal-body" id="out_9">Idle thread. Ready for deployment.</pre>
+              </div>
+            </div>
+          </div>
+        </div>
+
+
+          
         <div class="custom-card" id="api_3">
           <div class="card-header-flex" onclick="toggleCard('api_3')">
             <div>
