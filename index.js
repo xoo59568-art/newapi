@@ -408,6 +408,55 @@ app.get("/api/spotify", async (req, res) => {
 
 
 // =======================
+// 📌 Pinterest Search
+// =======================
+app.get("/search/pinterest", async (req, res) => {
+  try {
+    const { q, type, limit } = req.query;
+
+    // query check
+    if (!q) {
+      return res.status(400).json({
+        status: false,
+        creator: CREATOR,
+        message: "Query is required"
+      });
+    }
+
+    const baseUrl = `${req.protocol}://${req.get("host")}`;
+
+    // default values
+    const searchType = type || "both";
+    const searchLimit = limit || 10;
+
+    // fetch pinterest search
+    const { data } = await axios.get(
+      `https://jerrycoder.oggyapi.workers.dev/search/pin?q=${encodeURIComponent(q)}&type=${searchType}&limit=${searchLimit}`
+    );
+
+    // response
+    res.json({
+      status: true,
+      creator: CREATOR,
+      baseUrl,
+      query: q,
+      type: data.type,
+      total: data.total,
+      result: data.result
+    });
+
+  } catch (err) {
+    console.log(err);
+
+    res.status(500).json({
+      status: false,
+      creator: CREATOR
+    });
+  }
+});
+
+
+// =======================
 // 🎵 Pinterest Download 
 // =======================
 app.get("/api/pinterest", async (req, res) => {
