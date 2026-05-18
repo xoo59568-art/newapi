@@ -10,14 +10,15 @@
 
       :root {
         --primary: #a855f7;
-        --primary-glow: rgba(168, 85, 247, 0.25);
+        --primary-glow: rgba(168, 85, 247, 0.35);
         --cyan: #06b6d4;
+        --cyan-glow: rgba(6, 182, 212, 0.25);
         --dark-bg: #020617;
         --card-bg: rgba(15, 23, 42, 0.45);
         --card-border: rgba(255, 255, 255, 0.06);
         --text-main: #f8fafc;
         --text-muted: #64748b;
-        --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        --transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
       }
 
       * {
@@ -33,8 +34,8 @@
         min-height: 100vh;
         overflow-x: hidden;
         background-image: 
-          radial-gradient(circle at 80% 0%, rgba(168, 85, 247, 0.12) 0%, transparent 40%),
-          radial-gradient(circle at 20% 100%, rgba(6, 182, 212, 0.08) 0%, transparent 40%);
+          radial-gradient(circle at 80% 0%, rgba(168, 85, 247, 0.15) 0%, transparent 45%),
+          radial-gradient(circle at 20% 100%, rgba(6, 182, 212, 0.1) 0%, transparent 45%);
         background-attachment: fixed;
       }
 
@@ -49,44 +50,48 @@
         pointer-events: none;
       }
 
-      /* Header Styling */
+      /* Ultra Premium Top Header UI */
       .header {
-        padding: 3rem 1.5rem 1.5rem;
+        padding: 4rem 1.5rem 2.5rem;
         text-align: center;
+        position: relative;
       }
 
       .logo-wrapper {
         display: inline-flex;
         align-items: center;
-        gap: 1rem;
-        background: rgba(255, 255, 255, 0.02);
-        backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
-        padding: 0.6rem 2rem;
+        gap: 1.2rem;
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.01) 100%);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        padding: 0.8rem 2.5rem;
         border-radius: 100px;
-        border: 1px solid var(--card-border);
-        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-        margin-bottom: 1.5rem;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255,255,255,0.1);
+        margin-bottom: 1.8rem;
         transition: var(--transition);
       }
 
       .logo-wrapper:hover {
-        border-color: rgba(168, 85, 247, 0.3);
-        box-shadow: 0 0 25px var(--primary-glow);
+        border-color: rgba(168, 85, 247, 0.4);
+        box-shadow: 0 0 35px var(--primary-glow);
+        transform: translateY(-2px);
       }
 
       .logo-icon {
-        font-size: 2rem;
-        background: linear-gradient(135deg, var(--primary) 0%, var(--cyan) 100%);
+        font-size: 2.2rem;
+        background: linear-gradient(135deg, #c084fc 0%, var(--cyan) 100%);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
+        filter: drop-shadow(0 0 8px var(--primary-glow));
       }
 
       .logo-text {
-        font-size: 1.8rem;
-        font-weight: 700;
-        letter-spacing: 2px;
+        font-size: 2rem;
+        font-weight: 800;
+        letter-spacing: 3px;
         color: #ffffff;
+        text-shadow: 0 2px 10px rgba(0,0,0,0.5);
       }
 
       .tagline {
@@ -96,70 +101,151 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        gap: 0.5rem;
+        gap: 0.6rem;
+        font-weight: 500;
       }
 
       .status-pulse {
-        width: 8px;
-        height: 8px;
+        width: 10px;
+        height: 10px;
         background-color: #10b981;
         border-radius: 50%;
         display: inline-block;
-        box-shadow: 0 0 10px #10b981;
+        box-shadow: 0 0 14px #10b981;
         animation: pulse 2s infinite;
       }
 
       @keyframes pulse {
-        0% { transform: scale(0.95); opacity: 0.5; }
-        70% { transform: scale(1); opacity: 1; box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
-        100% { transform: scale(0.95); opacity: 0.5; }
+        0% { transform: scale(0.9); opacity: 0.6; box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.5); }
+        70% { transform: scale(1.1); opacity: 1; box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
+        100% { transform: scale(0.9); opacity: 0.6; box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
       }
 
-      /* Counter Grid */
-      .stats-panel {
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        gap: 1.25rem;
-        max-width: 900px;
-        margin: 0 auto;
+      /* Futuristic Glowing Search Engine Bar */
+      .search-container {
+        max-width: 600px;
+        margin: 0 auto 3rem;
+        position: relative;
+        padding: 0 1rem;
       }
 
-      .stat-item {
-        background: var(--card-bg);
-        border: 1px solid var(--card-border);
-        padding: 1.25rem;
-        border-radius: 20px;
-        backdrop-filter: blur(10px);
-        -webkit-backdrop-filter: blur(10px);
+      .search-wrapper {
+        position: relative;
+        display: flex;
+        align-items: center;
+      }
+
+      .search-icon {
+        position: absolute;
+        left: 1.5rem;
+        color: var(--primary);
+        font-size: 1.1rem;
+        pointer-events: none;
+        filter: drop-shadow(0 0 5px var(--primary-glow));
         transition: var(--transition);
       }
 
-      .stat-item:hover {
-        transform: translateY(-2px);
-        border-color: rgba(255,255,255,0.1);
-        background: rgba(15, 23, 42, 0.6);
+      .search-input {
+        width: 100%;
+        background: rgba(15, 23, 42, 0.4);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: 20px;
+        padding: 1.1rem 1.1rem 1.1rem 3.5rem;
+        color: white;
+        font-size: 1rem;
+        font-family: inherit;
+        backdrop-filter: blur(15px);
+        -webkit-backdrop-filter: blur(15px);
+        transition: var(--transition);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.3), inset 0 1px 1px rgba(255,255,255,0.05);
       }
 
+      .search-input:focus {
+        outline: none;
+        border-color: var(--cyan);
+        box-shadow: 0 0 25px rgba(6, 182, 212, 0.25), inset 0 1px 1px rgba(255,255,255,0.1);
+        background: rgba(15, 23, 42, 0.7);
+      }
+
+      .search-input:focus + .search-icon {
+        color: var(--cyan);
+        filter: drop-shadow(0 0 5px var(--cyan-glow));
+      }
+
+      /* High-Tech Glowing Stats Panel Grid */
+      .stats-panel {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 1.5rem;
+        max-width: 1000px;
+        margin: 0 auto;
+        padding: 0 1rem;
+      }
+
+      .stat-item {
+        background: linear-gradient(135deg, rgba(15, 23, 42, 0.6) 0%, rgba(15, 23, 42, 0.3) 100%);
+        border: 1px solid var(--card-border);
+        padding: 1.5rem 1rem;
+        border-radius: 24px;
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        transition: var(--transition);
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+      }
+
+      .stat-item::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; width: 100%; height: 100%;
+        background: linear-gradient(45deg, transparent, rgba(255,255,255,0.02), transparent);
+        transform: translateX(-100%);
+        transition: 0.6s;
+      }
+
+      .stat-item:hover::before {
+        transform: translateX(100%);
+      }
+
+      .stat-item:hover {
+        transform: translateY(-5px);
+        background: rgba(15, 23, 42, 0.7);
+      }
+
+      .stat-item.srv-count:hover { border-color: var(--primary); box-shadow: 0 10px 25px var(--primary-glow); }
+      .stat-item.gateway:hover { border-color: #10b981; box-shadow: 0 10px 25px rgba(16, 185, 129, 0.2); }
+      .stat-item.method:hover { border-color: var(--cyan); box-shadow: 0 10px 25px var(--cyan-glow); }
+      .stat-item.lag:hover { border-color: #f59e0b; box-shadow: 0 10px 25px rgba(245, 158, 11, 0.2); }
+
       .stat-val {
-        font-size: 1.8rem;
-        font-weight: 700;
+        font-size: 2.2rem;
+        font-weight: 800;
         font-family: 'JetBrains Mono', monospace;
         color: #ffffff;
+        letter-spacing: -1px;
+      }
+      
+      .srv-count .stat-val {
+        background: linear-gradient(135deg, #ffffff 0%, #d8b4fe 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
       }
 
       .stat-lbl {
         font-size: 0.75rem;
         color: var(--text-muted);
         text-transform: uppercase;
-        letter-spacing: 1px;
-        margin-top: 0.2rem;
+        letter-spacing: 1.5px;
+        margin-top: 0.4rem;
+        font-weight: 700;
       }
 
       /* Container */
       .main-content {
         max-width: 1300px;
         margin: 0 auto;
-        padding: 2rem 1.5rem;
+        padding: 3rem 1.5rem;
       }
 
       .wrapper-title {
@@ -296,19 +382,44 @@
         background: rgba(0, 0, 0, 0.5);
       }
 
-      /* Radio Buttons Custom UI Mode */
-      .radio-btn-custom {
-        padding: 0.8rem;
-        background: rgba(0, 0, 0, 0.3);
-        border: 1px solid rgba(255, 255, 255, 0.06);
+      /* Live cURL Panel Display UI */
+      .curl-display-wrapper {
+        margin-top: 1rem;
+        position: relative;
+        display: flex;
+        align-items: center;
+        background: rgba(0,0,0,0.4);
+        border: 1px solid rgba(255,255,255,0.04);
         border-radius: 12px;
-        font-size: 0.85rem;
-        font-weight: 600;
-        color: var(--text-muted);
-        text-transform: lowercase;
-        transition: var(--transition);
-        user-select: none;
+        padding: 0.25rem 0.5rem 0.25rem 1rem;
       }
+
+      .curl-text-field {
+        width: 100%;
+        background: transparent;
+        border: none;
+        outline: none;
+        color: #38bdf8;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.78rem;
+        white-space: nowrap;
+        overflow-x: auto;
+        pointer-events: auto;
+        padding-right: 2.5rem;
+      }
+
+      .curl-copy-trigger-btn {
+        position: absolute;
+        right: 6px;
+        background: rgba(255,255,255,0.02);
+        border: 1px solid rgba(255,255,255,0.05);
+        color: #94a3b8;
+        padding: 0.5rem;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: var(--transition);
+      }
+      .curl-copy-trigger-btn:hover { color: white; background: rgba(168,85,247,0.2); border-color: var(--primary); }
 
       /* Control Buttons */
       .btn-flex-group {
@@ -342,17 +453,6 @@
         box-shadow: 0 8px 20px rgba(168, 85, 247, 0.25);
       }
 
-      .btn-code {
-        background: rgba(255, 255, 255, 0.03);
-        color: #cbd5e1;
-        border: 1px solid rgba(255, 255, 255, 0.06);
-      }
-
-      .btn-code:hover {
-        background: rgba(255, 255, 255, 0.06);
-        color: white;
-      }
-
       /* Terminal Panel */
       .terminal-box {
         margin-top: 1.25rem;
@@ -379,6 +479,12 @@
         gap: 0.5rem;
       }
 
+      .terminal-action-flex-group {
+        display: flex;
+        gap: 0.85rem;
+        align-items: center;
+      }
+
       .tool-btn {
         background: transparent;
         border: none;
@@ -390,6 +496,7 @@
       }
 
       .tool-btn:hover { color: #cbd5e1; }
+      .tool-btn.url-copy-btn:hover { color: var(--cyan); }
 
       .terminal-body {
         padding: 1.1rem;
@@ -497,12 +604,12 @@
 
       /* Grid Fixes */
       @media (max-width: 900px) {
-        .stats-panel { grid-template-columns: repeat(2, 1fr); gap: 0.85rem; }
+        .stats-panel { grid-template-columns: repeat(2, 1fr); gap: 1rem; }
       }
       @media (max-width: 768px) {
         .cards-grid { grid-template-columns: 1fr; }
-        .header { padding: 2rem 1rem 1rem; }
-        .logo-text { font-size: 1.5rem; }
+        .header { padding: 3rem 1rem 1.5rem; }
+        .logo-text { font-size: 1.7rem; }
       }
     </style>
 </head>
@@ -513,23 +620,30 @@
         <i class="fas fa-rabbit logo-icon"></i>
         <h1 class="logo-text">RABBIT API</h1>
       </div>
-      <p class="tagline"><span class="status-pulse"></span> Production Pipeline Monitoring Interface</p>
+      <p class="tagline"><span class="status-pulse"></span> Rest API Interface For Users</p>
+
+      <div class="search-container">
+        <div class="search-wrapper">
+          <i class="fas fa-search search-icon"></i>
+          <input type="text" id="apiSearchField" class="search-input" placeholder="Search operational route stacks (e.g. Spotify)..." oninput="filterDashboardCards()">
+        </div>
+      </div>
 
       <div class="stats-panel">
-        <div class="stat-item">
-          <div class="stat-val">22</div>
-          <div class="stat-lbl">Services</div>
+        <div class="stat-item srv-count">
+          <div class="stat-val" id="liveServiceCounter">0</div>
+          <div class="stat-lbl">Services Active</div>
         </div>
-        <div class="stat-item">
-          <div class="stat-val">Active</div>
-          <div class="stat-lbl">Gateway</div>
+        <div class="stat-item gateway">
+          <div class="stat-val" style="color: #10b981;">Online</div>
+          <div class="stat-lbl">Gateway Status</div>
         </div>
-        <div class="stat-item">
-          <div class="stat-val">GET</div>
-          <div class="stat-lbl">Method</div>
+        <div class="stat-item method">
+          <div class="stat-val" style="color: var(--cyan);">GET</div>
+          <div class="stat-lbl">Method Type</div>
         </div>
-        <div class="stat-item">
-          <div class="stat-val">0ms</div>
+        <div class="stat-item lag">
+          <div class="stat-val" style="color: #f59e0b;">0ms</div>
           <div class="stat-lbl">Lag Rate</div>
         </div>
       </div>
@@ -551,15 +665,23 @@
           <div class="expand-container">
             <div class="expand-section">
               <label class="label-text">Media Source URL</label>
-              <input type="text" class="field-input" id="in_0" placeholder="Enter universal media url target..." data-param="url">
+              <input type="text" class="field-input" id="in_0" placeholder="Enter universal media url target..." data-param="url" oninput="syncLiveCurlDisplay('/api/dwnall', 0)">
+              
+              <div class="curl-display-wrapper">
+                <input type="text" class="curl-text-field" id="curl_view_0" readonly value='curl -X GET "http://localhost/api/dwnall"'>
+                <button class="curl-copy-trigger-btn" onclick="grabCurl('/api/dwnall', 0)"><i class="fas fa-copy"></i></button>
+              </div>
+
               <div class="btn-flex-group">
                 <button class="action-btn btn-run" onclick="fireRequest('/api/dwnall', 0)"><i class="fas fa-bolt"></i> Execute</button>
-                <button class="action-btn btn-code" onclick="grabCurl('/api/dwnall', 0)"><i class="fas fa-terminal"></i> cURL</button>
               </div>
               <div class="terminal-box">
                 <div class="terminal-nav">
                   <div class="terminal-title"><span id="load_0" style="display:none;"><span class="mini-spin"></span></span>Console</div>
-                  <button class="tool-btn" onclick="copyStdout(0)"><i class="fas fa-copy"></i></button>
+                  <div class="terminal-action-flex-group">
+                    <button class="tool-btn url-copy-btn" onclick="copyRequestLiveUrl('/api/dwnall', 0)" title="Copy ReqURL"><i class="fas fa-link"></i> Url</button>
+                    <button class="tool-btn" onclick="copyStdout(0)"><i class="fas fa-copy"></i></button>
+                  </div>
                 </div>
                 <pre class="terminal-body" id="out_0">Idle thread. Ready for deployment.</pre>
               </div>
@@ -578,15 +700,23 @@
           <div class="expand-container">
             <div class="expand-section">
               <label class="label-text">Instagram URL</label>
-              <input type="text" class="field-input" id="in_1" placeholder="Paste Instagram post, reel or IGTV link..." data-param="url">
+              <input type="text" class="field-input" id="in_1" placeholder="Paste Instagram post, reel or IGTV link..." data-param="url" oninput="syncLiveCurlDisplay('/api/insta', 1)">
+              
+              <div class="curl-display-wrapper">
+                <input type="text" class="curl-text-field" id="curl_view_1" readonly value='curl -X GET "http://localhost/api/insta"'>
+                <button class="curl-copy-trigger-btn" onclick="grabCurl('/api/insta', 1)"><i class="fas fa-copy"></i></button>
+              </div>
+
               <div class="btn-flex-group">
                 <button class="action-btn btn-run" onclick="fireRequest('/api/insta', 1)"><i class="fas fa-bolt"></i> Execute</button>
-                <button class="action-btn btn-code" onclick="grabCurl('/api/insta', 1)"><i class="fas fa-terminal"></i> cURL</button>
               </div>
               <div class="terminal-box">
                 <div class="terminal-nav">
                   <div class="terminal-title"><span id="load_1" style="display:none;"><span class="mini-spin"></span></span>Console</div>
-                  <button class="tool-btn" onclick="copyStdout(1)"><i class="fas fa-copy"></i></button>
+                  <div class="terminal-action-flex-group">
+                    <button class="tool-btn url-copy-btn" onclick="copyRequestLiveUrl('/api/insta', 1)" title="Copy ReqURL"><i class="fas fa-link"></i> Url</button>
+                    <button class="tool-btn" onclick="copyStdout(1)"><i class="fas fa-copy"></i></button>
+                  </div>
                 </div>
                 <pre class="terminal-body" id="out_1">Idle thread. Ready for deployment.</pre>
               </div>
@@ -605,15 +735,23 @@
           <div class="expand-container">
             <div class="expand-section">
               <label class="label-text">Facebook Video URL</label>
-              <input type="text" class="field-input" id="in_2" placeholder="Enter Facebook video/reel URL target..." data-param="url">
+              <input type="text" class="field-input" id="in_2" placeholder="Enter Facebook video/reel URL target..." data-param="url" oninput="syncLiveCurlDisplay('/api/fb', 2)">
+              
+              <div class="curl-display-wrapper">
+                <input type="text" class="curl-text-field" id="curl_view_2" readonly value='curl -X GET "http://localhost/api/fb"'>
+                <button class="curl-copy-trigger-btn" onclick="grabCurl('/api/fb', 2)"><i class="fas fa-copy"></i></button>
+              </div>
+
               <div class="btn-flex-group">
                 <button class="action-btn btn-run" onclick="fireRequest('/api/fb', 2)"><i class="fas fa-bolt"></i> Execute</button>
-                <button class="action-btn btn-code" onclick="grabCurl('/api/fb', 2)"><i class="fas fa-terminal"></i> cURL</button>
               </div>
               <div class="terminal-box">
                 <div class="terminal-nav">
                   <div class="terminal-title"><span id="load_2" style="display:none;"><span class="mini-spin"></span></span>Console</div>
-                  <button class="tool-btn" onclick="copyStdout(2)"><i class="fas fa-copy"></i></button>
+                  <div class="terminal-action-flex-group">
+                    <button class="tool-btn url-copy-btn" onclick="copyRequestLiveUrl('/api/fb', 2)" title="Copy ReqURL"><i class="fas fa-link"></i> Url</button>
+                    <button class="tool-btn" onclick="copyStdout(2)"><i class="fas fa-copy"></i></button>
+                  </div>
                 </div>
                 <pre class="terminal-body" id="out_2">Idle thread. Ready for deployment.</pre>
               </div>
@@ -622,7 +760,7 @@
         </div>
 
         <div class="custom-card" id="api_3">
-          <div class="card-header-flex" onclick="toggleCard('api_9')">
+          <div class="card-header-flex" onclick="toggleCard('api_3')">
             <div>
               <span class="badge-get">GET</span>
               <div class="route-title-text"><i class="fab fa-youtube"></i> YouTube Search</div>
@@ -631,34 +769,36 @@
           </div>
           <div class="expand-container">
             <div class="expand-section">
-              
               <label class="label-text">Enter Name / Query</label>
-              <input type="text" class="field-input" id="in_9_q" placeholder="Search video, music, shorts parameters..." data-param="q" style="margin-bottom: 1rem;">
+              <input type="text" class="field-input" id="in_3_q" placeholder="Search video, music, shorts parameters..." data-param="q" style="margin-bottom: 1rem;" oninput="syncLiveCurlDisplay('/search/youtube', 3)">
               
               <label class="label-text">Search Limit</label>
-              <input type="number" class="field-input" id="in_8_limit" placeholder="Enter result limit (e.g. 15)..." data-param="limit" value="15">
+              <input type="number" class="field-input" id="in_3_limit" placeholder="Enter result limit (e.g. 15)..." data-param="limit" value="15" oninput="syncLiveCurlDisplay('/search/youtube', 3)">
               
-              <div class="btn-flex-group">
-                <button class="action-btn btn-run" onclick="fireRequest('/search/youtube', 9)"><i class="fas fa-bolt"></i> Execute</button>
-                <button class="action-btn btn-code" onclick="grabCurl('/search/youtube', 9)"><i class="fas fa-terminal"></i> cURL</button>
+              <div class="curl-display-wrapper">
+                <input type="text" class="curl-text-field" id="curl_view_3" readonly value='curl -X GET "http://localhost/search/youtube?q=&limit=15"'>
+                <button class="curl-copy-trigger-btn" onclick="grabCurl('/search/youtube', 3)"><i class="fas fa-copy"></i></button>
               </div>
-              
+
+              <div class="btn-flex-group">
+                <button class="action-btn btn-run" onclick="fireRequest('/search/youtube', 3)"><i class="fas fa-bolt"></i> Execute</button>
+              </div>
               <div class="terminal-box">
                 <div class="terminal-nav">
-                  <div class="terminal-title"><span id="load_9" style="display:none;"><span class="mini-spin"></span></span>Console</div>
-                  <button class="tool-btn" onclick="copyStdout(9)"><i class="fas fa-copy"></i></button>
+                  <div class="terminal-title"><span id="load_3" style="display:none;"><span class="mini-spin"></span></span>Console</div>
+                  <div class="terminal-action-flex-group">
+                    <button class="tool-btn url-copy-btn" onclick="copyRequestLiveUrl('/search/youtube', 3)" title="Copy ReqURL"><i class="fas fa-link"></i> Url</button>
+                    <button class="tool-btn" onclick="copyStdout(3)"><i class="fas fa-copy"></i></button>
+                  </div>
                 </div>
-                <pre class="terminal-body" id="out_9">Idle thread. Ready for deployment.</pre>
+                <pre class="terminal-body" id="out_3">Idle thread. Ready for deployment.</pre>
               </div>
             </div>
           </div>
         </div>
 
-
-
-          
         <div class="custom-card" id="api_4">
-          <div class="card-header-flex" onclick="toggleCard('api_10')">
+          <div class="card-header-flex" onclick="toggleCard('api_4')">
             <div>
               <span class="badge-get">GET</span>
               <div class="route-title-text"><i class="fas fa-play-circle"></i> YouTube Play Audio</div>
@@ -667,30 +807,33 @@
           </div>
           <div class="expand-container">
             <div class="expand-section">
-              
               <label class="label-text">Enter Name / Query *</label>
-              <input type="text" class="field-input" id="in_10_q" placeholder="Enter song name (e.g. Tomake chai)..." data-param="q">
+              <input type="text" class="field-input" id="in_4_q" placeholder="Enter song name (e.g. Tomake chai)..." data-param="q" oninput="syncLiveCurlDisplay('/api/play', 4)">
               
-              <div class="btn-flex-group">
-                <button class="action-btn btn-run" onclick="fireRequest('/api/play', 10)"><i class="fas fa-bolt"></i> Execute</button>
-                <button class="action-btn btn-code" onclick="grabCurl('/api/play', 10)"><i class="fas fa-terminal"></i> cURL</button>
+              <div class="curl-display-wrapper">
+                <input type="text" class="curl-text-field" id="curl_view_4" readonly value='curl -X GET "http://localhost/api/play"'>
+                <button class="curl-copy-trigger-btn" onclick="grabCurl('/api/play', 4)"><i class="fas fa-copy"></i></button>
               </div>
-              
+
+              <div class="btn-flex-group">
+                <button class="action-btn btn-run" onclick="fireRequest('/api/play', 4)"><i class="fas fa-bolt"></i> Execute</button>
+              </div>
               <div class="terminal-box">
                 <div class="terminal-nav">
-                  <div class="terminal-title"><span id="load_10" style="display:none;"><span class="mini-spin"></span></span>Console</div>
-                  <button class="tool-btn" onclick="copyStdout(10)"><i class="fas fa-copy"></i></button>
+                  <div class="terminal-title"><span id="load_4" style="display:none;"><span class="mini-spin"></span></span>Console</div>
+                  <div class="terminal-action-flex-group">
+                    <button class="tool-btn url-copy-btn" onclick="copyRequestLiveUrl('/api/play', 4)" title="Copy ReqURL"><i class="fas fa-link"></i> Url</button>
+                    <button class="tool-btn" onclick="copyStdout(4)"><i class="fas fa-copy"></i></button>
+                  </div>
                 </div>
-                <pre class="terminal-body" id="out_10">Idle thread. Ready for deployment.</pre>
+                <pre class="terminal-body" id="out_4">Idle thread. Ready for deployment.</pre>
               </div>
             </div>
           </div>
         </div>
 
-
-          
         <div class="custom-card" id="api_5">
-          <div class="card-header-flex" onclick="toggleCard('api_3')">
+          <div class="card-header-flex" onclick="toggleCard('api_5')">
             <div>
               <span class="badge-get">GET</span>
               <div class="route-title-text"><i class="fas fa-music"></i> YouTube MP3 Song</div>
@@ -700,24 +843,32 @@
           <div class="expand-container">
             <div class="expand-section">
               <label class="label-text">YouTube Audio URL</label>
-              <input type="text" class="field-input" id="in_3" placeholder="Enter YouTube video link for MP3 conversion..." data-param="url">
+              <input type="text" class="field-input" id="in_5" placeholder="Enter YouTube video link for MP3 conversion..." data-param="url" oninput="syncLiveCurlDisplay('/api/song', 5)">
+              
+              <div class="curl-display-wrapper">
+                <input type="text" class="curl-text-field" id="curl_view_5" readonly value='curl -X GET "http://localhost/api/song"'>
+                <button class="curl-copy-trigger-btn" onclick="grabCurl('/api/song', 5)"><i class="fas fa-copy"></i></button>
+              </div>
+
               <div class="btn-flex-group">
-                <button class="action-btn btn-run" onclick="fireRequest('/api/song', 3)"><i class="fas fa-bolt"></i> Execute</button>
-                <button class="action-btn btn-code" onclick="grabCurl('/api/song', 3)"><i class="fas fa-terminal"></i> cURL</button>
+                <button class="action-btn btn-run" onclick="fireRequest('/api/song', 5)"><i class="fas fa-bolt"></i> Execute</button>
               </div>
               <div class="terminal-box">
                 <div class="terminal-nav">
-                  <div class="terminal-title"><span id="load_3" style="display:none;"><span class="mini-spin"></span></span>Console</div>
-                  <button class="tool-btn" onclick="copyStdout(3)"><i class="fas fa-copy"></i></button>
+                  <div class="terminal-title"><span id="load_5" style="display:none;"><span class="mini-spin"></span></span>Console</div>
+                  <div class="terminal-action-flex-group">
+                    <button class="tool-btn url-copy-btn" onclick="copyRequestLiveUrl('/api/song', 5)" title="Copy ReqURL"><i class="fas fa-link"></i> Url</button>
+                    <button class="tool-btn" onclick="copyStdout(5)"><i class="fas fa-copy"></i></button>
+                  </div>
                 </div>
-                <pre class="terminal-body" id="out_3">Idle thread. Ready for deployment.</pre>
+                <pre class="terminal-body" id="out_5">Idle thread. Ready for deployment.</pre>
               </div>
             </div>
           </div>
         </div>
 
         <div class="custom-card" id="api_6">
-          <div class="card-header-flex" onclick="toggleCard('api_4')">
+          <div class="card-header-flex" onclick="toggleCard('api_6')">
             <div>
               <span class="badge-get">GET</span>
               <div class="route-title-text"><i class="fab fa-youtube"></i> YouTube MP4 Downloader</div>
@@ -727,24 +878,32 @@
           <div class="expand-container">
             <div class="expand-section">
               <label class="label-text">YouTube Video URL</label>
-              <input type="text" class="field-input" id="in_4" placeholder="Enter YouTube link for MP4 stream download..." data-param="url">
+              <input type="text" class="field-input" id="in_6" placeholder="Enter YouTube link for MP4 stream download..." data-param="url" oninput="syncLiveCurlDisplay('/api/ytmp4', 6)">
+              
+              <div class="curl-display-wrapper">
+                <input type="text" class="curl-text-field" id="curl_view_6" readonly value='curl -X GET "http://localhost/api/ytmp4"'>
+                <button class="curl-copy-trigger-btn" onclick="grabCurl('/api/ytmp4', 6)"><i class="fas fa-copy"></i></button>
+              </div>
+
               <div class="btn-flex-group">
-                <button class="action-btn btn-run" onclick="fireRequest('/api/ytmp4', 4)"><i class="fas fa-bolt"></i> Execute</button>
-                <button class="action-btn btn-code" onclick="grabCurl('/api/ytmp4', 4)"><i class="fas fa-terminal"></i> cURL</button>
+                <button class="action-btn btn-run" onclick="fireRequest('/api/ytmp4', 6)"><i class="fas fa-bolt"></i> Execute</button>
               </div>
               <div class="terminal-box">
                 <div class="terminal-nav">
-                  <div class="terminal-title"><span id="load_4" style="display:none;"><span class="mini-spin"></span></span>Console</div>
-                  <button class="tool-btn" onclick="copyStdout(4)"><i class="fas fa-copy"></i></button>
+                  <div class="terminal-title"><span id="load_6" style="display:none;"><span class="mini-spin"></span></span>Console</div>
+                  <div class="terminal-action-flex-group">
+                    <button class="tool-btn url-copy-btn" onclick="copyRequestLiveUrl('/api/ytmp4', 6)" title="Copy ReqURL"><i class="fas fa-link"></i> Url</button>
+                    <button class="tool-btn" onclick="copyStdout(6)"><i class="fas fa-copy"></i></button>
+                  </div>
                 </div>
-                <pre class="terminal-body" id="out_4">Idle thread. Ready for deployment.</pre>
+                <pre class="terminal-body" id="out_6">Idle thread. Ready for deployment.</pre>
               </div>
             </div>
           </div>
         </div>
 
         <div class="custom-card" id="api_7">
-          <div class="card-header-flex" onclick="toggleCard('api_5')">
+          <div class="card-header-flex" onclick="toggleCard('api_7')">
             <div>
               <span class="badge-get">GET</span>
               <div class="route-title-text"><i class="fas fa-search"></i> Spotify Search</div>
@@ -754,28 +913,35 @@
           <div class="expand-container">
             <div class="expand-section">
               <label class="label-text">Enter Name / Query</label>
-              <input type="text" class="field-input" id="in_5_q" placeholder="Search track, album, artist parameters..." data-param="q" style="margin-bottom: 1rem;">
+              <input type="text" class="field-input" id="in_7_q" placeholder="Search track, album, artist parameters..." data-param="q" style="margin-bottom: 1rem;" oninput="syncLiveCurlDisplay('/search/spotify', 7)">
               
               <label class="label-text">Search Limit</label>
-              <input type="number" class="field-input" id="in_5_limit" placeholder="Enter result limit (e.g. 10)..." data-param="limit" value="10">
+              <input type="number" class="field-input" id="in_7_limit" placeholder="Enter result limit (e.g. 10)..." data-param="limit" value="10" oninput="syncLiveCurlDisplay('/search/spotify', 7)">
               
+              <div class="curl-display-wrapper">
+                <input type="text" class="curl-text-field" id="curl_view_7" readonly value='curl -X GET "http://localhost/search/spotify?q=&limit=10"'>
+                <button class="curl-copy-trigger-btn" onclick="grabCurl('/search/spotify', 7)"><i class="fas fa-copy"></i></button>
+              </div>
+
               <div class="btn-flex-group">
-                <button class="action-btn btn-run" onclick="fireRequest('/search/spotify', 5)"><i class="fas fa-bolt"></i> Execute</button>
-                <button class="action-btn btn-code" onclick="grabCurl('/search/spotify', 5)"><i class="fas fa-terminal"></i> cURL</button>
+                <button class="action-btn btn-run" onclick="fireRequest('/search/spotify', 7)"><i class="fas fa-bolt"></i> Execute</button>
               </div>
               <div class="terminal-box">
                 <div class="terminal-nav">
-                  <div class="terminal-title"><span id="load_5" style="display:none;"><span class="mini-spin"></span></span>Console</div>
-                  <button class="tool-btn" onclick="copyStdout(5)"><i class="fas fa-copy"></i></button>
+                  <div class="terminal-title"><span id="load_7" style="display:none;"><span class="mini-spin"></span></span>Console</div>
+                  <div class="terminal-action-flex-group">
+                    <button class="tool-btn url-copy-btn" onclick="copyRequestLiveUrl('/search/spotify', 7)" title="Copy ReqURL"><i class="fas fa-link"></i> Url</button>
+                    <button class="tool-btn" onclick="copyStdout(7)"><i class="fas fa-copy"></i></button>
+                  </div>
                 </div>
-                <pre class="terminal-body" id="out_5">Idle thread. Ready for deployment.</pre>
+                <pre class="terminal-body" id="out_7">Idle thread. Ready for deployment.</pre>
               </div>
             </div>
           </div>
         </div>
 
         <div class="custom-card" id="api_8">
-          <div class="card-header-flex" onclick="toggleCard('api_6')">
+          <div class="card-header-flex" onclick="toggleCard('api_8')">
             <div>
               <span class="badge-get">GET</span>
               <div class="route-title-text"><i class="fab fa-spotify"></i> Spotify Downloader</div>
@@ -785,24 +951,32 @@
           <div class="expand-container">
             <div class="expand-section">
               <label class="label-text">Spotify Track Link</label>
-              <input type="text" class="field-input" id="in_6" placeholder="Paste direct URL link..." data-param="url">
+              <input type="text" class="field-input" id="in_8" placeholder="Paste direct URL link..." data-param="url" oninput="syncLiveCurlDisplay('/api/spotify', 8)">
+              
+              <div class="curl-display-wrapper">
+                <input type="text" class="curl-text-field" id="curl_view_8" readonly value='curl -X GET "http://localhost/api/spotify"'>
+                <button class="curl-copy-trigger-btn" onclick="grabCurl('/api/spotify', 8)"><i class="fas fa-copy"></i></button>
+              </div>
+
               <div class="btn-flex-group">
-                <button class="action-btn btn-run" onclick="fireRequest('/api/spotify', 6)"><i class="fas fa-bolt"></i> Execute</button>
-                <button class="action-btn btn-code" onclick="grabCurl('/api/spotify', 6)"><i class="fas fa-terminal"></i> cURL</button>
+                <button class="action-btn btn-run" onclick="fireRequest('/api/spotify', 8)"><i class="fas fa-bolt"></i> Execute</button>
               </div>
               <div class="terminal-box">
                 <div class="terminal-nav">
-                  <div class="terminal-title"><span id="load_6" style="display:none;"><span class="mini-spin"></span></span>Console</div>
-                  <button class="tool-btn" onclick="copyStdout(6)"><i class="fas fa-copy"></i></button>
+                  <div class="terminal-title"><span id="load_8" style="display:none;"><span class="mini-spin"></span></span>Console</div>
+                  <div class="terminal-action-flex-group">
+                    <button class="tool-btn url-copy-btn" onclick="copyRequestLiveUrl('/api/spotify', 8)" title="Copy ReqURL"><i class="fas fa-link"></i> Url</button>
+                    <button class="tool-btn" onclick="copyStdout(8)"><i class="fas fa-copy"></i></button>
+                  </div>
                 </div>
-                <pre class="terminal-body" id="out_6">Idle thread. Ready for deployment.</pre>
+                <pre class="terminal-body" id="out_8">Idle thread. Ready for deployment.</pre>
               </div>
             </div>
           </div>
         </div>
 
         <div class="custom-card" id="api_9">
-          <div class="card-header-flex" onclick="toggleCard('api_7')">
+          <div class="card-header-flex" onclick="toggleCard('api_9')">
             <div>
               <span class="badge-get">GET</span>
               <div class="route-title-text"><i class="fas fa-search-plus"></i> Pinterest Search</div>
@@ -811,47 +985,52 @@
           </div>
           <div class="expand-container">
             <div class="expand-section">
-              
               <label class="label-text">Q *</label>
-              <input type="text" class="field-input" id="in_7_q" placeholder="Enter keyword (e.g. anime wallpaper)..." data-param="q" style="margin-bottom: 1.25rem;">
+              <input type="text" class="field-input" id="in_9_q" placeholder="Enter keyword (e.g. anime wallpaper)..." data-param="q" style="margin-bottom: 1.25rem;" oninput="syncLivePinterestCurlDisplay('/search/pinterest', 9)">
               
               <label class="label-text">TYPE *</label>
               <div style="display: flex; gap: 0.75rem; margin-bottom: 1.25rem;">
                 <label style="flex: 1; text-align: center; cursor: pointer;">
-                  <input type="radio" name="pin_type_7" value="image" style="display:none;" onchange="updateRadioStyle(this)">
+                  <input type="radio" name="pin_type_9" value="image" style="display:none;" onchange="updateRadioStyle(this); syncLivePinterestCurlDisplay('/search/pinterest', 9);">
                   <div class="radio-btn-custom">image</div>
                 </label>
                 <label style="flex: 1; text-align: center; cursor: pointer;">
-                  <input type="radio" name="pin_type_7" value="both" checked style="display:none;" onchange="updateRadioStyle(this)">
+                  <input type="radio" name="pin_type_9" value="both" checked style="display:none;" onchange="updateRadioStyle(this); syncLivePinterestCurlDisplay('/search/pinterest', 9);">
                   <div class="radio-btn-custom" style="background: rgba(168, 85, 247, 0.1); border-color: var(--primary); color: #ffffff;">both</div>
                 </label>
                 <label style="flex: 1; text-align: center; cursor: pointer;">
-                  <input type="radio" name="pin_type_7" value="video" style="display:none;" onchange="updateRadioStyle(this)">
+                  <input type="radio" name="pin_type_9" value="video" style="display:none;" onchange="updateRadioStyle(this); syncLivePinterestCurlDisplay('/search/pinterest', 9);">
                   <div class="radio-btn-custom">video</div>
                 </label>
               </div>
               
               <label class="label-text">LIMIT *</label>
-              <input type="number" class="field-input" id="in_7_limit" placeholder="Enter limit (e.g. 5)..." data-param="limit" value="5">
+              <input type="number" class="field-input" id="in_9_limit" placeholder="Enter limit (e.g. 5)..." data-param="limit" value="5" oninput="syncLivePinterestCurlDisplay('/search/pinterest', 9)">
               
-              <div class="btn-flex-group" style="margin-top: 1.25rem;">
-                <button class="action-btn btn-run" onclick="firePinterestRequest('/search/pinterest', 7)"><i class="fas fa-bolt"></i> Execute</button>
-                <button class="action-btn btn-code" onclick="grabPinterestCurl('/search/pinterest', 7)"><i class="fas fa-terminal"></i> cURL</button>
+              <div class="curl-display-wrapper">
+                <input type="text" class="curl-text-field" id="curl_view_9" readonly value='curl -X GET "http://localhost/search/pinterest?q=&type=both&limit=5"'>
+                <button class="curl-copy-trigger-btn" onclick="grabPinterestCurl('/search/pinterest', 9)"><i class="fas fa-copy"></i></button>
               </div>
-              
+
+              <div class="btn-flex-group" style="margin-top: 1.25rem;">
+                <button class="action-btn btn-run" onclick="firePinterestRequest('/search/pinterest', 9)"><i class="fas fa-bolt"></i> Execute</button>
+              </div>
               <div class="terminal-box">
                 <div class="terminal-nav">
-                  <div class="terminal-title"><span id="load_7" style="display:none;"><span class="mini-spin"></span></span>Console</div>
-                  <button class="tool-btn" onclick="copyStdout(7)"><i class="fas fa-copy"></i></button>
+                  <div class="terminal-title"><span id="load_9" style="display:none;"><span class="mini-spin"></span></span>Console</div>
+                  <div class="terminal-action-flex-group">
+                    <button class="tool-btn url-copy-btn" onclick="copyRequestLivePinterestUrl('/search/pinterest', 9)" title="Copy ReqURL"><i class="fas fa-link"></i> Url</button>
+                    <button class="tool-btn" onclick="copyStdout(9)"><i class="fas fa-copy"></i></button>
+                  </div>
                 </div>
-                <pre class="terminal-body" id="out_7">Idle thread. Ready for deployment.</pre>
+                <pre class="terminal-body" id="out_9">Idle thread. Ready for deployment.</pre>
               </div>
             </div>
           </div>
         </div>
 
         <div class="custom-card" id="api_10">
-          <div class="card-header-flex" onclick="toggleCard('api_8')">
+          <div class="card-header-flex" onclick="toggleCard('api_10')">
             <div>
               <span class="badge-get">GET</span>
               <div class="route-title-text"><i class="fab fa-pinterest"></i> Pinterest Downloader</div>
@@ -861,19 +1040,25 @@
           <div class="expand-container">
             <div class="expand-section">
               <label class="label-text">Pinterest URL / Link</label>
-              <input type="text" class="field-input" id="in_8" placeholder="Paste Pinterest pin, image or video link..." data-param="url">
+              <input type="text" class="field-input" id="in_10" placeholder="Paste Pinterest pin, image or video link..." data-param="url" oninput="syncLiveCurlDisplay('/api/pinterest', 10)">
               
-              <div class="btn-flex-group">
-                <button class="action-btn btn-run" onclick="fireRequest('/api/pinterest', 8)"><i class="fas fa-bolt"></i> Execute</button>
-                <button class="action-btn btn-code" onclick="grabCurl('/api/pinterest', 8)"><i class="fas fa-terminal"></i> cURL</button>
+              <div class="curl-display-wrapper">
+                <input type="text" class="curl-text-field" id="curl_view_10" readonly value='curl -X GET "http://localhost/api/pinterest"'>
+                <button class="curl-copy-trigger-btn" onclick="grabCurl('/api/pinterest', 10)"><i class="fas fa-copy"></i></button>
               </div>
-              
+
+              <div class="btn-flex-group">
+                <button class="action-btn btn-run" onclick="fireRequest('/api/pinterest', 10)"><i class="fas fa-bolt"></i> Execute</button>
+              </div>
               <div class="terminal-box">
                 <div class="terminal-nav">
-                  <div class="terminal-title"><span id="load_8" style="display:none;"><span class="mini-spin"></span></span>Console</div>
-                  <button class="tool-btn" onclick="copyStdout(8)"><i class="fas fa-copy"></i></button>
+                  <div class="terminal-title"><span id="load_10" style="display:none;"><span class="mini-spin"></span></span>Console</div>
+                  <div class="terminal-action-flex-group">
+                    <button class="tool-btn url-copy-btn" onclick="copyRequestLiveUrl('/api/pinterest', 10)" title="Copy ReqURL"><i class="fas fa-link"></i> Url</button>
+                    <button class="tool-btn" onclick="copyStdout(10)"><i class="fas fa-copy"></i></button>
+                  </div>
                 </div>
-                <pre class="terminal-body" id="out_8">Idle thread. Ready for deployment.</pre>
+                <pre class="terminal-body" id="out_10">Idle thread. Ready for deployment.</pre>
               </div>
             </div>
           </div>
@@ -903,7 +1088,24 @@
 
     <script>
       // =======================================================
-      // ১. গ্লোবাল কার্ড টগল মেকানিজম (কার্ড ওপেন/ক্লোজ করার ফাংশন)
+      // ১. সার্চ ফিল্টারিং মেকানিজম (কার্ড খোঁজার জন্য)
+      // =======================================================
+      function filterDashboardCards() {
+        const input = document.getElementById('apiSearchField').value.toLowerCase().trim();
+        const cards = document.querySelectorAll('.custom-card');
+
+        cards.forEach(card => {
+          const title = card.querySelector('.route-title-text').textContent.toLowerCase();
+          if (title.includes(input)) {
+            card.style.display = 'grid';
+          } else {
+            card.style.display = 'none';
+          }
+        });
+      }
+
+      // =======================================================
+      // ২. গ্লোবাল কার্ড টগল মেকানিজম (কার্ড ওপেন/ক্লোজ করার ফাংশন)
       // =======================================================
       function toggleCard(cardId) {
         const activeCard = document.getElementById(cardId);
@@ -914,7 +1116,7 @@
       }
 
       // =======================================================
-      // ২. সিস্টেম নোটিফিকেশন টোস্ট মেকার (কপি করার পপ-আপ মেসেজ)
+      // ৩. সিস্টেম নোটিফিকেশন টোস্ট মেকার (কপি করার পপ-আপ মেসেজ)
       // =======================================================
       function pushNotification(msg) {
         const toast = document.getElementById('toast');
@@ -924,7 +1126,7 @@
       }
 
       // =======================================================
-      // ৩. স্ট্যান্ডার্ড এপিআই ইউআরএল জেনারেটর (Auto-Domain + Dynamic Path)
+      // ৪. স্ট্যান্ডার্ড এপিআই ইউআরএল জেনারেটর (Auto-Domain + Dynamic Path)
       // =======================================================
       function buildFinalUrl(customPath, index) {
         const fields = document.querySelectorAll(`#api_${index} .field-input`);
@@ -941,16 +1143,69 @@
       }
 
       // =======================================================
-      // ৪. কোর এপিআই রিকোয়েস্ট হ্যান্ডলার (সব স্ট্যান্ডার্ড কার্ডের মেইন রান লজিক)
+      // ৫. লাইভ ইউআরএল কপি ট্রিগার লজিক (ReqURL System)
+      // =======================================================
+      function copyRequestLiveUrl(customPath, index) {
+        const targetUrl = buildFinalUrl(customPath, index);
+        navigator.clipboard.writeText(targetUrl).then(() => {
+          pushNotification('Live Request URL copied!');
+        });
+      }
+
+      function copyRequestLivePinterestUrl(customPath, index) {
+        const targetUrl = buildPinterestUrl(customPath, index);
+        navigator.clipboard.writeText(targetUrl).then(() => {
+          pushNotification('Live Pinterest Request URL copied!');
+        });
+      }
+
+      // =======================================================
+      // ৬. লাইভ cURL প্যানেল আপডেট ও সিঙ্ক ইঞ্জিন
+      // =======================================================
+      function syncLiveCurlDisplay(customPath, index) {
+        const targetUrl = buildFinalUrl(customPath, index);
+        const viewField = document.getElementById(`curl_view_${index}`);
+        if(viewField) {
+          viewField.value = `curl -X GET "${targetUrl}"`;
+        }
+      }
+
+      function syncLivePinterestCurlDisplay(customPath, index) {
+        const targetUrl = buildPinterestUrl(customPath, index);
+        const viewField = document.getElementById(`curl_view_${index}`);
+        if(viewField) {
+          viewField.value = `curl -X GET "${targetUrl}"`;
+        }
+      }
+
+      // এপিআই কার্ড কাউন্টার এবং ডিফল্ট ডোমেন লোডার ইঞ্জিন
+      window.addEventListener('DOMContentLoaded', () => {
+        const totalApis = document.querySelectorAll('.cards-grid .custom-card').length;
+        document.getElementById('liveServiceCounter').textContent = totalApis;
+
+        for(let i=0; i<=10; i++){
+          if(i === 9) {
+            syncLivePinterestCurlDisplay('/search/pinterest', 9);
+          } else {
+            const currentCard = document.getElementById(`api_${i}`);
+            if(currentCard) {
+              const currentPath = currentCard.querySelector('.btn-run')?.getAttribute('onclick')?.match(/'([^']+)'/)?.[1];
+              if(currentPath) syncLiveCurlDisplay(currentPath, i);
+            }
+          }
+        }
+      });
+
+      // =======================================================
+      // ৭. কোর এপিআই রিকোয়েস্ট হ্যান্ডলার (সব ক্লিনার লগ প্রোডাকশন)
       // =======================================================
       async function fireRequest(customPath, index) {
         const loader = document.getElementById(`load_${index}`);
         const consoleOut = document.getElementById(`out_${index}`);
-        
         const finalProcessingEndpoint = buildFinalUrl(customPath, index);
 
         loader.style.display = 'inline-flex';
-        consoleOut.textContent = `Establishing secure connection proxy...\nTarget Host: ${window.location.origin}\nHandshaking with sequence...`;
+        consoleOut.textContent = `Streaming cluster connection package... \nHandshaking with pipeline kernel core...`;
         consoleOut.style.color = '#64748b';
 
         try {
@@ -961,16 +1216,15 @@
 
           consoleOut.textContent = JSON.stringify({
             status: rawFeed.status,
-              OwnerNumber: +917439382677,
+            OwnerNumber: +917439382677,
             executionTime: `${t1 - t0}ms`,
             engine: "RabbitXmd V.09",
-            request_uri: finalProcessingEndpoint,
-            payload: computedJSON
+            response: computedJSON
           }, null, 2);
           
           consoleOut.style.color = rawFeed.ok ? '#22c55e' : '#ef4444';
         } catch (exception) {
-          consoleOut.textContent = `Cluster Sync Exception Log:\nStatus: Failed\nReason: ${exception.message}\nFailed Target: ${finalProcessingEndpoint}`;
+          consoleOut.textContent = `Deployment Exception Core Trace:\nStatus: Runtime Error\nFeedback: Communication channel disrupted.`;
           consoleOut.style.color = '#ef4444';
         } finally {
           loader.style.display = 'none';
@@ -978,7 +1232,7 @@
       }
 
       // =======================================================
-      // ৫. স্ট্যান্ডার্ড cURL জেনারেটর কমান্ড ফাংশন
+      // ৮. স্ট্যান্ডার্ড cURL জেনারেটর কমান্ড ফাংশন
       // =======================================================
       function grabCurl(customPath, index) {
         const finalUrl = buildFinalUrl(customPath, index);
@@ -988,7 +1242,7 @@
       }
 
       // =======================================================
-      // ৬. কনসোল টার্মিনালের আউটপুট ডাটা কপি করার ফাংশন
+      // ৯. কনসোল টার্মিনালের আউটপুট ডাটা কপি করার ফাংশন
       // =======================================================
       function copyStdout(index) {
         const currentData = document.getElementById(`out_${index}`).textContent;
@@ -998,7 +1252,7 @@
       }
 
       // =======================================================
-      // ৭. পিন্টারেস্ট রেডিও বাটন স্টাইলিং টগল লজিক (Image/Video/Both বাটন কালার চেঞ্জার)
+      // ১০. পিন্টারেস্ট রেডিও বাটন স্টাইলিং টগল লজিক (Image/Video/Both বাটন কালার চেঞ্জার)
       // =======================================================
       function updateRadioStyle(input) {
         const container = input.closest('.expand-section');
@@ -1015,7 +1269,7 @@
       }
 
       // =======================================================
-      // ৮. পিন্টারেস্ট সার্চ স্পেসিফিক ইউআরএল বিল্ডার (রেডিও বাটন ডাটা ট্র্যাকার)
+      // ১১. পিন্টারেস্ট সার্চ স্পেসিফিক ইউআরএল বিল্ডার (রেডিও বাটন ডাটা ট্র্যাকার)
       // =======================================================
       function buildPinterestUrl(customPath, index) {
         const fields = document.querySelectorAll(`#api_${index} .field-input`);
@@ -1027,7 +1281,8 @@
           if (val) targetParams[key] = val;
         });
 
-        const selectedType = document.querySelector(`input[name="pin_type_${index}"]:checked`).value;
+        const selectedRadio = document.querySelector(`input[name="pin_type_${index}"]:checked`);
+        const selectedType = selectedRadio ? selectedRadio.value : 'both';
         targetParams['type'] = selectedType;
 
         const uriParams = Object.keys(targetParams).map(k => `${k}=${encodeURIComponent(targetParams[k])}`).join('&');
@@ -1035,7 +1290,7 @@
       }
 
       // =======================================================
-      // ৯. পিন্টারেস্ট সার্চ এপিআই রিকোয়েস্ট রানার ফাংশন
+      // ১২. পিন্টারেস্ট সার্চ এপিআই রিকোয়েস্ট রানার ফাংশন
       // =======================================================
       async function firePinterestRequest(customPath, index) {
         const loader = document.getElementById(`load_${index}`);
@@ -1043,7 +1298,7 @@
         const finalProcessingEndpoint = buildPinterestUrl(customPath, index);
 
         loader.style.display = 'inline-flex';
-        consoleOut.textContent = `Searching Your Request By RabbitXmd Api...\nURL: ${finalProcessingEndpoint}`;
+        consoleOut.textContent = `Streaming cluster search parameter index...\nSynchronizing data matrix loops...`;
         consoleOut.style.color = '#64748b';
 
         try {
@@ -1055,13 +1310,13 @@
           consoleOut.textContent = JSON.stringify({
             status: rawFeed.status,
             executionTime: `${t1 - t0}ms`,
-            engine: "Rabbit Kernel V2.9.5 Custom-Core",
-            request_uri: finalProcessingEndpoint,
-            payload: computedJSON
+              contact: 917439382677,
+            engine: "Rabbit Api V2.9.5",
+            response: computedJSON
           }, null, 2);
           consoleOut.style.color = rawFeed.ok ? '#22c55e' : '#ef4444';
         } catch (exception) {
-          consoleOut.textContent = `Cluster Sync Exception Log:\nStatus: Failed\nReason: ${exception.message}`;
+          consoleOut.textContent = `Deployment Exception Core Trace:\nStatus: Runtime Error\nFeedback: Communication channel disrupted.`;
           consoleOut.style.color = '#ef4444';
         } finally {
           loader.style.display = 'none';
@@ -1069,7 +1324,7 @@
       }
 
       // =======================================================
-      // ১০. পিন্টারেস্ট সার্চ cURL জেনারেটর ফাংশন
+      // ১৩. পিন্টারেস্ট সার্চ cURL জেনারেটর ফাংশন
       // =======================================================
       function grabPinterestCurl(customPath, index) {
         const finalUrl = buildPinterestUrl(customPath, index);
