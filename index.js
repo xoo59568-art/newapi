@@ -361,7 +361,7 @@ app.get("/search/spotify", async (req, res) => {
 // =======================
 // 🎵 Spotify Download
 // =======================
-app.get("/down/spotify", async (req, res) => {
+app.get("/api/spotify", async (req, res) => {
   try {
     const { url } = req.query;
 
