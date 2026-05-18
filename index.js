@@ -261,7 +261,10 @@ app.get("/api/play", async (req, res) => {
     );
 
     const audioUrl =
-      audioRes.data.payload.result.audio;
+  audioRes?.data?.payload?.result?.audio ||
+  audioRes?.data?.result?.audio ||
+  audioRes?.data?.result ||
+  null;
 
     // =======================
     // RESPONSE
