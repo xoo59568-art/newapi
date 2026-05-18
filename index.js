@@ -190,13 +190,18 @@ app.get("/api/facebook", async (req, res) => {
 // ▶️ Play API
 // =======================
 
+
+  
+    // =======================
+// ▶️ Play API
+// =======================
+
 app.get("/api/play", async (req, res) => {
 
   try {
 
     const { q, url } = req.query;
 
-    // support q= and url=
     const input = q || url;
 
     if (!input) {
@@ -214,7 +219,7 @@ app.get("/api/play", async (req, res) => {
     let video;
 
     // =======================
-    // IF URL
+    // IF YOUTUBE URL
     // =======================
 
     if (
@@ -222,11 +227,18 @@ app.get("/api/play", async (req, res) => {
       input.includes("youtu.be")
     ) {
 
-      const searchRes = await axios.get(
-        `https://rabbitapi.nett.to/search/youtube?q=${encodeURIComponent(input)}&limit=1`
-      );
-
-      video = searchRes.data.result[0];
+      video = {
+        title: "YouTube Audio",
+        url: input,
+        videoId: null,
+        duration: null,
+        views: null,
+        uploaded: null,
+        thumbnail: null,
+        author: {
+          name: null
+        }
+      };
 
     } else {
 
@@ -261,10 +273,20 @@ app.get("/api/play", async (req, res) => {
     );
 
     const audioUrl =
-  audioRes?.data?.payload?.result?.audio ||
-  audioRes?.data?.result?.audio ||
-  audioRes?.data?.result ||
-  null;
+      audioRes?.data?.payload?.result?.audio ||
+      audioRes?.data?.result?.audio ||
+      audioRes?.data?.result ||
+      null;
+
+    if (!audioUrl) {
+
+      return res.json({
+        status: false,
+        creator: CREATOR,
+        message: "Audio fetch failed"
+      });
+
+    }
 
     // =======================
     // RESPONSE
