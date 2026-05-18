@@ -1,4 +1,5 @@
 const express = require("express");
+const yts = require("yt-search");
 const axios = require("axios");
 const cheerio = require("cheerio");
 const gis = require("g-i-s");
@@ -726,6 +727,108 @@ app.get("/api/pint", async (req, res) => {
     });
   }
 });
+
+
+// =======================
+// ▶️ YouTube Search
+// =======================
+
+app.get("/search/youtube", async (req, res) => {
+
+  try {
+
+    const {
+      query,
+      q,
+      limit
+    } = req.query;
+
+    // support both q= and query=
+    const searchQuery = query || q;
+
+    // default limit
+    const searchLimit = parseInt(limit) || 10;
+
+    // validation
+    if (!searchQuery) {
+
+      return res.status(400).json({
+        status: false,
+        creator: CREATOR,
+        message: "Enter query",
+        example: "/search/youtube?q=alan walker&limit=5"
+      });
+
+    }
+
+    const baseUrl = `${req.protocol}://${req.get("host")}`;
+
+    // search
+    const search = await yts(searchQuery);
+
+    const videos = search.videos
+      .slice(0, searchLimit)
+      .map((v, i) => ({
+
+        id: i + 1,
+
+        title: v.title,
+
+        url: v.url,
+
+        videoId: v.videoId,
+
+        duration: v.timestamp,
+
+        views: v.views,
+
+        uploaded: v.ago,
+
+        thumbnail: v.thumbnail,
+
+        author: {
+          name: v.author.name,
+          url: v.author.url
+        }
+
+      }));
+
+    // response
+    res.json({
+
+      status: true,
+
+      creator: CREATOR,
+
+      baseUrl,
+
+      query: searchQuery,
+
+      total: videos.length,
+
+      limit: searchLimit,
+
+      result: videos
+
+    });
+
+  } catch (e) {
+
+    res.status(500).json({
+
+      status: false,
+
+      creator: CREATOR,
+
+      error: e.message
+
+    });
+
+  }
+
+});
+
+
 
 // ======================
 // 🎤 Lyrics
