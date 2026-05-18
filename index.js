@@ -311,7 +311,50 @@ app.get("/api/insta2", async (req, res) => {
   }
 });
 
+// =======================
+// =======================
+// 🎵 Spotify Search
+// =======================
+app.get("/search/spotify", async (req, res) => {
+  try {
+    const { q, limit } = req.query;
 
+    // query check
+    if (!q) {
+      return res.status(400).json({
+        status: false,
+        creator: CREATOR,
+        message: "Query is required"
+      });
+    }
+
+    const baseUrl = `${req.protocol}://${req.get("host")}`;
+
+    // fetch spotify search
+    const { data } = await axios.get(
+      `https://jerrycoder.oggyapi.workers.dev/search/spotify?q=${encodeURIComponent(q)}&limit=${limit || 15}`
+    );
+
+    // response
+    res.json({
+      status: true,
+      creator: CREATOR,
+      baseUrl,
+      query: q,
+      total: data.tracks?.length || 0,
+      result: data.tracks || []
+    });
+
+  } catch (err) {
+    console.log(err);
+
+    res.status(500).json({
+      status: false,
+      creator: CREATOR,
+      message: "Internal Server Error"
+    });
+  }
+});
 
 
 
