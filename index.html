@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Rabbit API Dashboard</title>
-    <!-- FontAwesome Premium CDN for Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
       @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
@@ -297,6 +296,20 @@
         background: rgba(0, 0, 0, 0.5);
       }
 
+      /* Radio Buttons Custom UI Mode */
+      .radio-btn-custom {
+        padding: 0.8rem;
+        background: rgba(0, 0, 0, 0.3);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: 12px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--text-muted);
+        text-transform: lowercase;
+        transition: var(--transition);
+        user-select: none;
+      }
+
       /* Control Buttons */
       .btn-flex-group {
         display: flex;
@@ -441,7 +454,7 @@
         display: inline-flex;
         align-items: center;
         gap: 0.75rem;
-        background: rgba(255, 255, 255, 0.01);
+        background: rgba(2, 4, 8, 0.2);
         padding: 0.5rem 1.5rem;
         border-radius: 100px;
         border: 1px solid rgba(255,255,255,0.03);
@@ -495,7 +508,6 @@
 </head>
 <body>
 
-    <!-- Header Panel -->
     <header class="header">
       <div class="logo-wrapper">
         <i class="fas fa-rabbit logo-icon"></i>
@@ -523,13 +535,11 @@
       </div>
     </header>
 
-    <!-- Main Service Interface -->
     <main class="main-content">
       <h2 class="wrapper-title"><i class="fas fa-microchip"></i> Operations Control</h2>
 
       <div class="cards-grid">
         
-        <!-- 1. Universal Downloader -->
         <div class="custom-card active" id="api_0">
           <div class="card-header-flex" onclick="toggleCard('api_0')">
             <div>
@@ -557,7 +567,6 @@
           </div>
         </div>
 
-        <!-- 2. Instagram Downloader -->
         <div class="custom-card" id="api_1">
           <div class="card-header-flex" onclick="toggleCard('api_1')">
             <div>
@@ -585,7 +594,6 @@
           </div>
         </div>
 
-        <!-- 3. Facebook Downloader -->
         <div class="custom-card" id="api_2">
           <div class="card-header-flex" onclick="toggleCard('api_2')">
             <div>
@@ -613,7 +621,6 @@
           </div>
         </div>
 
-        <!-- 4. YouTube MP3 -->
         <div class="custom-card" id="api_3">
           <div class="card-header-flex" onclick="toggleCard('api_3')">
             <div>
@@ -641,7 +648,6 @@
           </div>
         </div>
 
-        <!-- 5. YouTube MP4 -->
         <div class="custom-card" id="api_4">
           <div class="card-header-flex" onclick="toggleCard('api_4')">
             <div>
@@ -669,44 +675,37 @@
           </div>
         </div>
 
-        <!-- 6. Spotify Search (Updated with Query & Limit Options) -->
-<div class="custom-card" id="api_5">
-  <div class="card-header-flex" onclick="toggleCard('api_5')">
-    <div>
-      <span class="badge-get">GET</span>
-      <div class="route-title-text"><i class="fas fa-search"></i> Spotify Search</div>
-    </div>
-    <i class="fas fa-chevron-down arrow-icon"></i>
-  </div>
-  <div class="expand-container">
-    <div class="expand-section">
-      
-      <!-- 🌟 ১ নম্বর ইনপুট: ট্র্যাক বা গানের নাম (Query) -->
-      <label class="label-text">Enter Name / Query</label>
-      <input type="text" class="field-input" id="in_5_q" placeholder="Search track, album, artist parameters..." data-param="q" style="margin-bottom: 1rem;">
-      
-      <!-- 🌟 ২ নম্বর ইনপুট: রেজাল্টের সংখ্যা (Limit) -->
-      <label class="label-text">Search Limit</label>
-      <input type="number" class="field-input" id="in_5_limit" placeholder="Enter result limit (e.g. 10)..." data-param="limit" value="10">
-      
-      <div class="btn-flex-group">
-        <!-- 🌟 এখানে পাথ বদলে আপনার রিকোয়েস্ট অনুযায়ী /search/spotify করে দেওয়া হয়েছে -->
-        <button class="action-btn btn-run" onclick="fireRequest('/search/spotify', 5)"><i class="fas fa-bolt"></i> Execute</button>
-        <button class="action-btn btn-code" onclick="grabCurl('/search/spotify', 5)"><i class="fas fa-terminal"></i> cURL</button>
-      </div>
-      
-      <div class="terminal-box">
-        <div class="terminal-nav">
-          <div class="terminal-title"><span id="load_5" style="display:none;"><span class="mini-spin"></span></span>Console</div>
-          <button class="tool-btn" onclick="copyStdout(5)"><i class="fas fa-copy"></i></button>
+        <div class="custom-card" id="api_5">
+          <div class="card-header-flex" onclick="toggleCard('api_5')">
+            <div>
+              <span class="badge-get">GET</span>
+              <div class="route-title-text"><i class="fas fa-search"></i> Spotify Search</div>
+            </div>
+            <i class="fas fa-chevron-down arrow-icon"></i>
+          </div>
+          <div class="expand-container">
+            <div class="expand-section">
+              <label class="label-text">Enter Name / Query</label>
+              <input type="text" class="field-input" id="in_5_q" placeholder="Search track, album, artist parameters..." data-param="q" style="margin-bottom: 1rem;">
+              
+              <label class="label-text">Search Limit</label>
+              <input type="number" class="field-input" id="in_5_limit" placeholder="Enter result limit (e.g. 10)..." data-param="limit" value="10">
+              
+              <div class="btn-flex-group">
+                <button class="action-btn btn-run" onclick="fireRequest('/search/spotify', 5)"><i class="fas fa-bolt"></i> Execute</button>
+                <button class="action-btn btn-code" onclick="grabCurl('/search/spotify', 5)"><i class="fas fa-terminal"></i> cURL</button>
+              </div>
+              <div class="terminal-box">
+                <div class="terminal-nav">
+                  <div class="terminal-title"><span id="load_5" style="display:none;"><span class="mini-spin"></span></span>Console</div>
+                  <button class="tool-btn" onclick="copyStdout(5)"><i class="fas fa-copy"></i></button>
+                </div>
+                <pre class="terminal-body" id="out_5">Idle thread. Ready for deployment.</pre>
+              </div>
+            </div>
+          </div>
         </div>
-        <pre class="terminal-body" id="out_5">Idle thread. Ready for deployment.</pre>
-      </div>
-    </div>
-  </div>
-</div>
 
-        <!-- 7. Spotify Download -->
         <div class="custom-card" id="api_6">
           <div class="card-header-flex" onclick="toggleCard('api_6')">
             <div>
@@ -718,10 +717,10 @@
           <div class="expand-container">
             <div class="expand-section">
               <label class="label-text">Spotify Track Link</label>
-              <input type="text" class="field-input" id="in_6" placeholder="Paste direct open.spotify.com URL link..." data-param="url">
+              <input type="text" class="field-input" id="in_6" placeholder="Paste direct URL link..." data-param="url">
               <div class="btn-flex-group">
                 <button class="action-btn btn-run" onclick="fireRequest('/api/spotify', 6)"><i class="fas fa-bolt"></i> Execute</button>
-                <button class="action-btn btn-code" onclick="grabCurl('/api/spotify/', 6)"><i class="fas fa-terminal"></i> cURL</button>
+                <button class="action-btn btn-code" onclick="grabCurl('/api/spotify', 6)"><i class="fas fa-terminal"></i> cURL</button>
               </div>
               <div class="terminal-box">
                 <div class="terminal-nav">
@@ -734,42 +733,89 @@
           </div>
         </div>
 
-        <!-- 8. Pinterest Downloader (New Stack Added) -->
-<div class="custom-card" id="api_7">
-  <div class="card-header-flex" onclick="toggleCard('api_7')">
-    <div>
-      <span class="badge-get">GET</span>
-      <div class="route-title-text"><i class="fab fa-pinterest"></i> Pinterest Downloader</div>
-    </div>
-    <i class="fas fa-chevron-down arrow-icon"></i>
-  </div>
-  <div class="expand-container">
-    <div class="expand-section">
-      <label class="label-text">Pinterest URL / Link</label>
-      <!-- 🌟 এখানে data-param="url" দেওয়াতে এটি ব্যাকএন্ডে (?url=) হিসেবে ডাটা পাঠাবে -->
-      <input type="text" class="field-input" id="in_7" placeholder="Paste Pinterest pin, image or video link..." data-param="url">
-      
-      <div class="btn-flex-group">
-        <!-- 🌟 এখানে আপনার ইচ্ছেমতো কাস্টম পাথ '/api/pinterest' এবং কার্ড ইনডেক্স (7) বসানো হয়েছে -->
-        <button class="action-btn btn-run" onclick="fireRequest('/api/pinterest', 7)"><i class="fas fa-bolt"></i> Execute</button>
-        <button class="action-btn btn-code" onclick="grabCurl('/api/pinterest', 7)"><i class="fas fa-terminal"></i> cURL</button>
-      </div>
-      
-      <div class="terminal-box">
-        <div class="terminal-nav">
-          <div class="terminal-title"><span id="load_7" style="display:none;"><span class="mini-spin"></span></span>Console</div>
-          <button class="tool-btn" onclick="copyStdout(7)"><i class="fas fa-copy"></i></button>
+        <div class="custom-card" id="api_7">
+          <div class="card-header-flex" onclick="toggleCard('api_7')">
+            <div>
+              <span class="badge-get">GET</span>
+              <div class="route-title-text"><i class="fas fa-search-plus"></i> Pinterest Search</div>
+            </div>
+            <i class="fas fa-chevron-down arrow-icon"></i>
+          </div>
+          <div class="expand-container">
+            <div class="expand-section">
+              
+              <label class="label-text">Q *</label>
+              <input type="text" class="field-input" id="in_7_q" placeholder="Enter keyword (e.g. anime wallpaper)..." data-param="q" style="margin-bottom: 1.25rem;">
+              
+              <label class="label-text">TYPE *</label>
+              <div style="display: flex; gap: 0.75rem; margin-bottom: 1.25rem;">
+                <label style="flex: 1; text-align: center; cursor: pointer;">
+                  <input type="radio" name="pin_type_7" value="image" style="display:none;" onchange="updateRadioStyle(this)">
+                  <div class="radio-btn-custom">image</div>
+                </label>
+                <label style="flex: 1; text-align: center; cursor: pointer;">
+                  <input type="radio" name="pin_type_7" value="both" checked style="display:none;" onchange="updateRadioStyle(this)">
+                  <div class="radio-btn-custom" style="background: rgba(168, 85, 247, 0.1); border-color: var(--primary); color: #ffffff;">both</div>
+                </label>
+                <label style="flex: 1; text-align: center; cursor: pointer;">
+                  <input type="radio" name="pin_type_7" value="video" style="display:none;" onchange="updateRadioStyle(this)">
+                  <div class="radio-btn-custom">video</div>
+                </label>
+              </div>
+              
+              <label class="label-text">LIMIT *</label>
+              <input type="number" class="field-input" id="in_7_limit" placeholder="Enter limit (e.g. 5)..." data-param="limit" value="5">
+              
+              <div class="btn-flex-group" style="margin-top: 1.25rem;">
+                <button class="action-btn btn-run" onclick="firePinterestRequest('/search/pinterest', 7)"><i class="fas fa-bolt"></i> Execute</button>
+                <button class="action-btn btn-code" onclick="grabPinterestCurl('/search/pinterest', 7)"><i class="fas fa-terminal"></i> cURL</button>
+              </div>
+              
+              <div class="terminal-box">
+                <div class="terminal-nav">
+                  <div class="terminal-title"><span id="load_7" style="display:none;"><span class="mini-spin"></span></span>Console</div>
+                  <button class="tool-btn" onclick="copyStdout(7)"><i class="fas fa-copy"></i></button>
+                </div>
+                <pre class="terminal-body" id="out_7">Idle thread. Ready for deployment.</pre>
+              </div>
+            </div>
+          </div>
         </div>
-        <pre class="terminal-body" id="out_7">Idle thread. Ready for deployment.</pre>
-      </div>
-    </div>
-  </div>
-</div>
 
-    <!-- System Notification Micro-Toast -->
+        <div class="custom-card" id="api_8">
+          <div class="card-header-flex" onclick="toggleCard('api_8')">
+            <div>
+              <span class="badge-get">GET</span>
+              <div class="route-title-text"><i class="fab fa-pinterest"></i> Pinterest Downloader</div>
+            </div>
+            <i class="fas fa-chevron-down arrow-icon"></i>
+          </div>
+          <div class="expand-container">
+            <div class="expand-section">
+              <label class="label-text">Pinterest URL / Link</label>
+              <input type="text" class="field-input" id="in_8" placeholder="Paste Pinterest pin, image or video link..." data-param="url">
+              
+              <div class="btn-flex-group">
+                <button class="action-btn btn-run" onclick="fireRequest('/api/pinterest', 8)"><i class="fas fa-bolt"></i> Execute</button>
+                <button class="action-btn btn-code" onclick="grabCurl('/api/pinterest', 8)"><i class="fas fa-terminal"></i> cURL</button>
+              </div>
+              
+              <div class="terminal-box">
+                <div class="terminal-nav">
+                  <div class="terminal-title"><span id="load_8" style="display:none;"><span class="mini-spin"></span></span>Console</div>
+                  <button class="tool-btn" onclick="copyStdout(8)"><i class="fas fa-copy"></i></button>
+                </div>
+                <pre class="terminal-body" id="out_8">Idle thread. Ready for deployment.</pre>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </main>
+
     <div id="toast" class="toast-msg"></div>
 
-    <!-- Layout Footer -->
     <footer class="premium-footer">
       <div class="dev-badge-pnl">
         <div class="avatar-ring"><i class="fas fa-rabbit"></i></div>
@@ -787,9 +833,10 @@
       </div>
     </footer>
 
-    <!-- High Performance Functional Logic -->
     <script>
-      // Single Trigger Card Toggle Mechanism
+      // =======================================================
+      // ১. গ্লোবাল কার্ড টগল মেকানিজম (কার্ড ওপেন/ক্লোজ করার ফাংশন)
+      // =======================================================
       function toggleCard(cardId) {
         const activeCard = document.getElementById(cardId);
         const isActive = activeCard.classList.contains('active');
@@ -798,7 +845,9 @@
         if(!isActive) activeCard.classList.add('active');
       }
 
-      // Memory Efficient System Notifications 
+      // =======================================================
+      // ২. সিস্টেম নোটিফিকেশন টোস্ট মেকার (কপি করার পপ-আপ মেসেজ)
+      // =======================================================
       function pushNotification(msg) {
         const toast = document.getElementById('toast');
         toast.innerHTML = `<i class="fas fa-bolt" style="color:#a855f7"></i> <span>${msg}</span>`;
@@ -806,24 +855,26 @@
         setTimeout(() => toast.classList.remove('show'), 2000);
       }
 
-      // Helper function to build final URL dynamically (Auto-Domain + Dynamic HTML Path + Dynamic Param)
+      // =======================================================
+      // ৩. স্ট্যান্ডার্ড এপিআই ইউআরএল জেনারেটর (Auto-Domain + Dynamic Path)
+      // =======================================================
       function buildFinalUrl(customPath, index) {
         const fields = document.querySelectorAll(`#api_${index} .field-input`);
         const targetParams = {};
 
         fields.forEach(f => {
-          const key = f.dataset.param; // ইনপুট বক্সের data-param ডিটেক্ট করছে (যেমন: url, q)
+          const key = f.dataset.param; 
           const val = f.value.trim();
           if (val) targetParams[key] = val;
         });
 
         const uriParams = Object.keys(targetParams).map(k => `${k}=${encodeURIComponent(targetParams[k])}`).join('&');
-        
-        // window.location.origin নিজে থেকেই আপনার লাইভ হোস্টিং ডোমেন লিংকটি নিয়ে নেবে
         return window.location.origin + customPath + (uriParams ? `?${uriParams}` : '');
       }
 
-      // Asynchronous Pipeline Fetch Call Handler
+      // =======================================================
+      // ৪. কোর এপিআই রিকোয়েস্ট হ্যান্ডলার (সব স্ট্যান্ডার্ড কার্ডের মেইন রান লজিক)
+      // =======================================================
       async function fireRequest(customPath, index) {
         const loader = document.getElementById(`load_${index}`);
         const consoleOut = document.getElementById(`out_${index}`);
@@ -857,7 +908,9 @@
         }
       }
 
-      // cURL Generator
+      // =======================================================
+      // ৫. স্ট্যান্ডার্ড cURL জেনারেটর কমান্ড ফাংশন
+      // =======================================================
       function grabCurl(customPath, index) {
         const finalUrl = buildFinalUrl(customPath, index);
         navigator.clipboard.writeText(`curl -X GET "${finalUrl}"`).then(() => {
@@ -865,11 +918,94 @@
         });
       }
 
-      // Copy stdout Terminal Data
+      // =======================================================
+      // ৬. কনসোল টার্মিনালের আউটপুট ডাটা কপি করার ফাংশন
+      // =======================================================
       function copyStdout(index) {
         const currentData = document.getElementById(`out_${index}`).textContent;
         navigator.clipboard.writeText(currentData).then(() => {
           pushNotification('Terminal stdout string copied!');
+        });
+      }
+
+      // =======================================================
+      // ৭. পিন্টারেস্ট রেডিও বাটন স্টাইলিং টগল লজিক (Image/Video/Both বাটন কালার চেঞ্জার)
+      // =======================================================
+      function updateRadioStyle(input) {
+        const container = input.closest('.expand-section');
+        container.querySelectorAll('.radio-btn-custom').forEach(el => {
+          el.style.background = 'rgba(0,0,0,0.3)';
+          el.style.borderColor = 'rgba(255,255,255,0.06)';
+          el.style.color = 'var(--text-muted)';
+        });
+        
+        const customDiv = input.nextElementSibling;
+        customDiv.style.background = 'rgba(168, 85, 247, 0.1)';
+        customDiv.style.borderColor = 'var(--primary)';
+        customDiv.style.color = '#ffffff';
+      }
+
+      // =======================================================
+      // ৮. পিন্টারেস্ট সার্চ স্পেসিফিক ইউআরএল বিল্ডার (রেডিও বাটন ডাটা ট্র্যাকার)
+      // =======================================================
+      function buildPinterestUrl(customPath, index) {
+        const fields = document.querySelectorAll(`#api_${index} .field-input`);
+        const targetParams = {};
+
+        fields.forEach(f => {
+          const key = f.dataset.param;
+          const val = f.value.trim();
+          if (val) targetParams[key] = val;
+        });
+
+        const selectedType = document.querySelector(`input[name="pin_type_${index}"]:checked`).value;
+        targetParams['type'] = selectedType;
+
+        const uriParams = Object.keys(targetParams).map(k => `${k}=${encodeURIComponent(targetParams[k])}`).join('&');
+        return window.location.origin + customPath + (uriParams ? `?${uriParams}` : '');
+      }
+
+      // =======================================================
+      // ৯. পিন্টারেস্ট সার্চ এপিআই রিকোয়েস্ট রানার ফাংশন
+      // =======================================================
+      async function firePinterestRequest(customPath, index) {
+        const loader = document.getElementById(`load_${index}`);
+        const consoleOut = document.getElementById(`out_${index}`);
+        const finalProcessingEndpoint = buildPinterestUrl(customPath, index);
+
+        loader.style.display = 'inline-flex';
+        consoleOut.textContent = `Establishing connection proxy pipeline...\nURL: ${finalProcessingEndpoint}`;
+        consoleOut.style.color = '#64748b';
+
+        try {
+          const t0 = Date.now();
+          const rawFeed = await fetch(finalProcessingEndpoint);
+          const computedJSON = await rawFeed.json();
+          const t1 = Date.now();
+
+          consoleOut.textContent = JSON.stringify({
+            status: rawFeed.status,
+            executionTime: `${t1 - t0}ms`,
+            engine: "Rabbit Kernel V2.9.5 Custom-Core",
+            request_uri: finalProcessingEndpoint,
+            payload: computedJSON
+          }, null, 2);
+          consoleOut.style.color = rawFeed.ok ? '#22c55e' : '#ef4444';
+        } catch (exception) {
+          consoleOut.textContent = `Cluster Sync Exception Log:\nStatus: Failed\nReason: ${exception.message}`;
+          consoleOut.style.color = '#ef4444';
+        } finally {
+          loader.style.display = 'none';
+        }
+      }
+
+      // =======================================================
+      // ১০. পিন্টারেস্ট সার্চ cURL জেনারেটর ফাংশন
+      // =======================================================
+      function grabPinterestCurl(customPath, index) {
+        const finalUrl = buildPinterestUrl(customPath, index);
+        navigator.clipboard.writeText(`curl -X GET "${finalUrl}"`).then(() => {
+          pushNotification('Pinterest cURL copied!');
         });
       }
     </script>
