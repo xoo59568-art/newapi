@@ -114,14 +114,17 @@ app.get("/api/fb3", async (req, res) => {
     const baseUrl = `${req.protocol}://${req.get("host")}`;
 
     const { data } = await axios.get(
-      `https://apiskeith.top/download/fbdl?url=${encodeURIComponent(url)}`
+      `https://rabbitapi.nett.to/api/fb?url=${encodeURIComponent(url)}`
     );
 
     res.json({
       status: true,
       creator: CREATOR,
       baseUrl,
-      result: data.result
+      title: data.title,
+      thumbnail: data.thumbnail,
+      sd: data.sd,
+      hd: data.hd
     });
 
   } catch {
