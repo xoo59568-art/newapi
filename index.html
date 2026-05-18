@@ -655,12 +655,45 @@
         </div>
 
 
+
+          
+        <div class="custom-card" id="api_10">
+          <div class="card-header-flex" onclick="toggleCard('api_10')">
+            <div>
+              <span class="badge-get">GET</span>
+              <div class="route-title-text"><i class="fas fa-play-circle"></i> YouTube Play Audio</div>
+            </div>
+            <i class="fas fa-chevron-down arrow-icon"></i>
+          </div>
+          <div class="expand-container">
+            <div class="expand-section">
+              
+              <label class="label-text">Enter Name / Query *</label>
+              <input type="text" class="field-input" id="in_10_q" placeholder="Enter song name (e.g. Tomake chai)..." data-param="q">
+              
+              <div class="btn-flex-group">
+                <button class="action-btn btn-run" onclick="fireRequest('/api/play', 10)"><i class="fas fa-bolt"></i> Execute</button>
+                <button class="action-btn btn-code" onclick="grabCurl('/api/play', 10)"><i class="fas fa-terminal"></i> cURL</button>
+              </div>
+              
+              <div class="terminal-box">
+                <div class="terminal-nav">
+                  <div class="terminal-title"><span id="load_10" style="display:none;"><span class="mini-spin"></span></span>Console</div>
+                  <button class="tool-btn" onclick="copyStdout(10)"><i class="fas fa-copy"></i></button>
+                </div>
+                <pre class="terminal-body" id="out_10">Idle thread. Ready for deployment.</pre>
+              </div>
+            </div>
+          </div>
+        </div>
+
+
           
         <div class="custom-card" id="api_3">
           <div class="card-header-flex" onclick="toggleCard('api_3')">
             <div>
               <span class="badge-get">GET</span>
-              <div class="route-title-text"><i class="fas fa-music"></i> YouTube MP3 Converter</div>
+              <div class="route-title-text"><i class="fas fa-music"></i> YouTube MP3 Song</div>
             </div>
             <i class="fas fa-chevron-down arrow-icon"></i>
           </div>
