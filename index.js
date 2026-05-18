@@ -185,6 +185,150 @@ app.get("/api/facebook", async (req, res) => {
 
 
 // =======================
+// ▶️ Play API
+// =======================
+
+app.get("/api/play", async (req, res) => {
+
+  try {
+
+    const { q, url } = req.query;
+
+    // support q= and url=
+    const input = q || url;
+
+    if (!input) {
+
+      return res.status(400).json({
+        status: false,
+        creator: CREATOR,
+        message: "Enter song name or YouTube URL"
+      });
+
+    }
+
+    const baseUrl = `${req.protocol}://${req.get("host")}`;
+
+    let video = null;
+
+    // =======================
+    // IF YOUTUBE URL
+    // =======================
+
+    if (
+      input.includes("youtube.com") ||
+      input.includes("youtu.be")
+    ) {
+
+      video = {
+        title: "YouTube Audio",
+        url: input,
+        thumbnail: null,
+        duration: null,
+        videoId: null,
+        views: null,
+        uploaded: null,
+        author: {
+          name: null,
+          url: null
+        }
+      };
+
+    } else {
+
+      // =======================
+      // SEARCH VIDEO
+      // =======================
+
+      const searchRes = await axios.get(
+        `https://rabbitapi.nett.to/search/youtube?q=${encodeURIComponent(input)}&limit=1`
+      );
+
+      video = searchRes.data.result[0];
+
+      if (!video) {
+
+        return res.json({
+          status: false,
+          creator: CREATOR,
+          message: "No result found"
+        });
+
+      }
+
+    }
+
+    // =======================
+    // GET AUDIO
+    // =======================
+
+    const audioRes = await axios.get(
+      `https://rabbitapi.nett.to/api/song?url=${encodeURIComponent(video.url)}`
+    );
+
+    const audio =
+      audioRes.data.payload?.result?.audio ||
+      audioRes.data.payload?.result?.url;
+
+    // =======================
+    // RESPONSE
+    // =======================
+
+    res.json({
+
+      status: true,
+
+      creator: CREATOR,
+
+      baseUrl,
+
+      query: input,
+
+      result: {
+
+        title: video.title,
+
+        videoId: video.videoId,
+
+        duration: video.duration,
+
+        views: video.views,
+
+        uploaded: video.uploaded,
+
+        thumbnail: video.thumbnail,
+
+        audio: audio,
+
+        author: {
+          name: video.author?.name,
+          url: video.author?.url
+        }
+
+      }
+
+    });
+
+  } catch (e) {
+
+    res.status(500).json({
+
+      status: false,
+
+      creator: CREATOR,
+
+      error: e.message
+
+    });
+
+  }
+
+});
+
+
+
+
+// =======================
 // 🎵 Song
 // =======================
 app.get("/api/song", async (req, res) => {
