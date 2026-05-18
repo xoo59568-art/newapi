@@ -1,7 +1,7 @@
 {
   "name": "neuro-api",
   "version": "1.0.0",
-  "description": "Rabbit Multi API",
+  "description": "Rabbit Multi API Server",
   "main": "index.js",
   "scripts": {
     "start": "node index.js"
@@ -10,9 +10,13 @@
     "node": ">=20"
   },
   "dependencies": {
-    "axios": "*",
-    "cheerio": "*",
-    "express": "*",
-    "g-i-s": "*"
+    "@sparticuz/chromium": "latest",
+    "axios": "latest",
+    "cheerio": "latest",
+    "express": "latest",
+    "g-i-s": "latest",
+    "images-scraper": "latest",
+    "puppeteer-core": "latest",
+    "yt-search": "latest"
   }
 }
