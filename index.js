@@ -23,7 +23,7 @@ async function raceAPIs(providers) {
         const result = await fn();
         if (!settled && result != null) {
           settled = true;
-          resolve({ result, source: name });
+          resolve({ result });
         }
       } catch {
         // silent
