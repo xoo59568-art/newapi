@@ -116,7 +116,7 @@ const PROVIDERS = {
       name: "keith",
       fn: (url) => axios.get(`https://apiskeith.top/download/audio?url=${encodeURIComponent(url)}`)
         .then(r => r.data?.result || null)
-    }
+    },
 
     {
       name: "rabbit1",
