@@ -1,1085 +1,462 @@
 const express = require("express");
-const yts = require("yt-search");
 const axios = require("axios");
-const cheerio = require("cheerio");
-const gis = require("g-i-s");
+const yts = require("yt-search");
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.set("trust proxy", true);
+app.use(express.json());
 
 const CREATOR = "𓋜 -𝐑ᴀ፝֟፝֟ʙʙɪᴛ/>𝟑ن𓂃";
 
-// ✅ Home
+// ─────────────────────────────────────────
+// 🔧 CORE UTILITY: Race multiple APIs
+// First one to succeed wins. If all fail → null
+// ─────────────────────────────────────────
+async function raceAPIs(providers) {
+  return new Promise((resolve) => {
+    let settled = false;
+    let failed = 0;
+
+    providers.forEach(async ({ name, fn }) => {
+      try {
+        const result = await fn();
+        if (!settled && result != null) {
+          settled = true;
+          resolve({ result, source: name });
+        }
+      } catch {
+        // silent
+      } finally {
+        failed++;
+        if (failed === providers.length && !settled) {
+          resolve(null);
+        }
+      }
+    });
+  });
+}
+
+// ─────────────────────────────────────────
+// 📦 API PROVIDERS REGISTRY
+// Add new providers here — auto-detected
+// ─────────────────────────────────────────
+const PROVIDERS = {
+
+  instagram: [
+    {
+      name: "faa",
+      fn: (url) => axios.get(`https://api-faa.my.id/faa/igdl?url=${encodeURIComponent(url)}`)
+        .then(r => r.data?.result)
+    },
+    {
+      name: "aswin",
+      fn: (url) => axios.get(`https://api-aswin-sparky.koyeb.app/api/downloader/igdl?url=${encodeURIComponent(url)}`)
+        .then(r => {
+          const d = r.data?.data?.[0];
+          return d ? { url: d.url, thumbnail: d.thumbnail } : null;
+        })
+    }
+  ],
+
+  facebook: [
+    {
+      name: "nayan",
+      fn: (url) => axios.get(`https://nayan-video-downloader.vercel.app/alldown?url=${encodeURIComponent(url)}`)
+        .then(r => {
+          const d = r.data?.data;
+          return d ? { title: d.title, thumbnail: d.thumbnail, sd: d.low, hd: d.high } : null;
+        })
+    },
+    {
+      name: "rabbit",
+      fn: (url) => axios.get(`https://rabbitapi.nett.to/api/fb?url=${encodeURIComponent(url)}`)
+        .then(r => r.data?.hd ? r.data : null)
+    },
+    {
+      name: "keith",
+      fn: (url) => axios.get(`https://apiskeith.top/download/fbdown?url=${encodeURIComponent(url)}`)
+        .then(r => r.data?.result ? { result: r.data.result } : null)
+    },
+    {
+      name: "david",
+      fn: (url) => axios.get(`https://apis.davidcyril.name.ng/facebook2?url=${encodeURIComponent(url)}`)
+        .then(r => r.data?.video ? { result: r.data.video } : null)
+    }
+  ],
+
+  youtube_video: [
+    {
+      name: "bunny",
+      fn: (url) => axios.get(`https://bunny-allsocal-downv2.vercel.app/api/download?url=${encodeURIComponent(url)}`)
+        .then(r => {
+          const d = r.data;
+          if (!d?.videos) return null;
+          return {
+            title: d.title,
+            thumbnail: d.thumbnail,
+            duration: d.duration,
+            "360p": d.videos.find(v => v.quality.includes("360p") && v.extension === "mp4") || null,
+            "720p": d.videos.find(v => v.quality.includes("720p") && v.extension === "mp4") || null,
+            "1080p": d.videos.find(v => v.quality.includes("1080p") && v.extension === "mp4") || null,
+            audio: d.audios?.[0] || null
+          };
+        })
+    }
+  ],
+
+  song: [
+    {
+      name: "rabbit",
+      fn: (url) => axios.get(`https://rabbitapi.nett.to/api/song?url=${encodeURIComponent(url)}`)
+        .then(r => {
+          const audio = r.data?.payload?.result?.audio || r.data?.result?.audio || r.data?.result;
+          return audio || null;
+        })
+    },
+    {
+      name: "keith",
+      fn: (url) => axios.get(`https://apiskeith.top/download/audio?url=${encodeURIComponent(url)}`)
+        .then(r => r.data?.result || null)
+    }
+  ],
+
+  pinterest: [
+    {
+      name: "jerry",
+      fn: (url) => axios.get(`https://jerrycoder.oggyapi.workers.dev/down/pinterest?url=${encodeURIComponent(url)}`)
+        .then(r => r.data?.url ? r.data : null)
+    },
+    {
+      name: "david",
+      fn: (url) => axios.get(`https://apis.davidcyril.name.ng/download/pinterest?url=${encodeURIComponent(url)}`)
+        .then(r => {
+          if (!r.data?.success) return null;
+          const media = r.data.data?.medias?.find(v => v.extension === "mp4") || r.data.data?.medias?.[0];
+          return media ? { title: r.data.data.title, thumbnail: r.data.data.thumbnail, url: media.url } : null;
+        })
+    }
+  ],
+
+  spotify: [
+    {
+      name: "jerry",
+      fn: (url) => axios.get(`https://jerrycoder.oggyapi.workers.dev/down/spotify?url=${encodeURIComponent(url)}`)
+        .then(r => r.data?.download_link ? { ...r.data, url: r.data.download_link } : null)
+    }
+  ]
+
+};
+
+// ─────────────────────────────────────────
+// 🌐 DETECT PLATFORM FROM URL
+// Used by /all universal endpoint
+// ─────────────────────────────────────────
+function detectPlatform(url) {
+  if (/instagram\.com/.test(url)) return "instagram";
+  if (/facebook\.com|fb\.watch/.test(url)) return "facebook";
+  if (/youtube\.com|youtu\.be/.test(url)) return "youtube_video";
+  if (/pinterest\.com|pin\.it/.test(url)) return "pinterest";
+  if (/spotify\.com/.test(url)) return "spotify";
+  return null;
+}
+
+// ─────────────────────────────────────────
+// 🧩 RESPONSE HELPER
+// ─────────────────────────────────────────
+function ok(res, req, data) {
+  return res.json({
+    status: true,
+    creator: CREATOR,
+    baseUrl: `${req.protocol}://${req.get("host")}`,
+    ...data
+  });
+}
+
+function fail(res, msg = "Failed") {
+  return res.status(500).json({ status: false, creator: CREATOR, message: msg });
+}
+
+// ─────────────────────────────────────────
+// 🏠 Home
+// ─────────────────────────────────────────
 app.get("/", (req, res) => {
   res.sendFile(__dirname + "/index.html");
 });
 
+// ─────────────────────────────────────────
+// 📸 /insta — Instagram downloader
+// ─────────────────────────────────────────
+app.get("/insta", async (req, res) => {
+  const url = req.query.url;
+  if (!url) return fail(res, "URL required");
 
+  const race = await raceAPIs(PROVIDERS.instagram.map(p => ({ name: p.name, fn: () => p.fn(url) })));
+  if (!race) return fail(res, "All Instagram APIs failed");
 
-// =======================
-// 📸 Instagram
-// =======================
-
-app.get("/api/instagram", async (req, res) => {
-  try {
-    const { url } = req.query;
-    if (!url) return res.status(400).json({ status: false, creator: CREATOR });
-
-    const baseUrl = `${req.protocol}://${req.get("host")}`;
-
-    const { data } = await axios.get(
-      `https://api-faa.my.id/faa/igdl?url=${encodeURIComponent(url)}`
-    );
-
-    res.json({
-      status: true,
-      creator: CREATOR,
-      baseUrl,
-      url: data.result
-    });
-
-  } catch {
-    res.json({ status: false, creator: CREATOR });
-  }
+  return ok(res, req, { source: race.source, result: race.result });
 });
 
-// =======================
-// 📸 Instagram
-// =======================
-app.get("/api/insta", async (req, res) => {
-  try {
-    const { url } = req.query;
-    if (!url) return res.status(400).json({ status: false, creator: CREATOR });
+// ─────────────────────────────────────────
+// 📘 /fb — Facebook downloader
+// ─────────────────────────────────────────
+app.get("/fb", async (req, res) => {
+  const url = req.query.url;
+  if (!url) return fail(res, "URL required");
 
-    const baseUrl = `${req.protocol}://${req.get("host")}`;
+  const race = await raceAPIs(PROVIDERS.facebook.map(p => ({ name: p.name, fn: () => p.fn(url) })));
+  if (!race) return fail(res, "All Facebook APIs failed");
 
-    const { data } = await axios.get(
-      `https://api-aswin-sparky.koyeb.app/api/downloader/igdl?url=${encodeURIComponent(url)}`
-    );
-
-    res.json({
-      status: true,
-      creator: CREATOR,
-      baseUrl,
-      thumbnail: data.data[0].thumbnail,
-      url: data.data[0].url
-    });
-
-  } catch {
-    res.json({ status: false, creator: CREATOR });
-  }
+  return ok(res, req, { source: race.source, result: race.result });
 });
 
+// ─────────────────────────────────────────
+// 🎥 /ytmp4 — YouTube video downloader
+// ─────────────────────────────────────────
+app.get("/ytmp4", async (req, res) => {
+  const url = req.query.url;
+  if (!url) return fail(res, "URL required");
 
+  const race = await raceAPIs(PROVIDERS.youtube_video.map(p => ({ name: p.name, fn: () => p.fn(url) })));
+  if (!race) return fail(res, "YouTube download failed");
 
-//Faceb
-
-app.get("/api/fb", async (req, res) => {
-  try {
-    const { url } = req.query;
-    if (!url) return res.status(400).json({ status: false, creator: CREATOR });
-
-    const baseUrl = `${req.protocol}://${req.get("host")}`;
-
-    const { data } = await axios.get(
-      `https://nayan-video-downloader.vercel.app/alldown?url=${encodeURIComponent(url)}`
-    );
-
-    res.json({
-      status: true,
-      creator: CREATOR,
-      baseUrl,
-      title: data.data.title,
-      thumbnail: data.data.thumbnail,
-  sd: data.data.low,
-  hd: data.data.high
-    });
-
-  } catch {
-    res.json({ status: false, creator: CREATOR });
-  }
-});
-
-
-
-//fb3
-
-app.get("/api/fb3", async (req, res) => {
-  try {
-    const { url } = req.query;
-    if (!url) return res.status(400).json({ status: false, creator: CREATOR });
-
-    const baseUrl = `${req.protocol}://${req.get("host")}`;
-
-    const { data } = await axios.get(
-      `https://rabbitapi.nett.to/api/fb?url=${encodeURIComponent(url)}`
-    );
-
-    res.json({
-      status: true,
-      creator: CREATOR,
-      baseUrl,
-      title: data.title,
-      thumbnail: data.thumbnail,
-      sd: data.sd,
-      hd: data.hd
-    });
-
-  } catch {
-    res.json({ status: false, creator: CREATOR });
-  }
-});
-
-
-//Facebook2
-
-app.get("/api/fb2", async (req, res) => {
-  try {
-    const { url } = req.query;
-    if (!url) return res.status(400).json({ status: false, creator: CREATOR });
-
-    const baseUrl = `${req.protocol}://${req.get("host")}`;
-
-    const { data } = await axios.get(
-      `https://apiskeith.top/download/fbdown?url=${encodeURIComponent(url)}`
-    );
-
-    res.json({
-      status: true,
-      creator: CREATOR,
-      baseUrl,
-      result: data.result
-    });
-
-  } catch {
-    res.json({ status: false, creator: CREATOR });
-  }
-});
-
-// =======================
-// 📘 Facebook
-// =======================
-app.get("/api/facebook", async (req, res) => {
-  try {
-    const { url } = req.query;
-    if (!url) return res.status(400).json({ status: false, creator: CREATOR });
-
-    const baseUrl = `${req.protocol}://${req.get("host")}`;
-
-    const { data } = await axios.get(
-      `https://apis.davidcyril.name.ng/facebook2?url=${encodeURIComponent(url)}`
-    );
-
-    res.json({
-      status: true,
-      creator: CREATOR,
-      baseUrl,
-      result: data.video
-    });
-
-  } catch {
-    res.json({ status: false, creator: CREATOR });
-  }
-});
-
-
-
-      
-// =======================
-// ▶️ Play API
-// =======================
-
-
-  
-    // =======================
-// ▶️ Play API
-// =======================
-
-app.get("/api/play", async (req, res) => {
-
-  try {
-
-    const { q, url } = req.query;
-
-    const input = q || url;
-
-    if (!input) {
-
-      return res.status(400).json({
-        status: false,
-        creator: CREATOR,
-        message: "Enter song name or YouTube URL"
-      });
-
+  const d = race.result;
+  return ok(res, req, {
+    source: race.source,
+    metadata: { title: d.title, thumbnail: d.thumbnail, duration: d.duration },
+    download: {
+      "360p": d["360p"] ? { quality: d["360p"].quality, url: d["360p"].url } : null,
+      "720p": d["720p"] ? { quality: d["720p"].quality, url: d["720p"].url } : null,
+      "1080p": d["1080p"] ? { quality: d["1080p"].quality, url: d["1080p"].url } : null,
+      audio: d.audio ? { quality: d.audio.quality, url: d.audio.url } : null
     }
+  });
+});
 
-    const baseUrl = `${req.protocol}://${req.get("host")}`;
+// ─────────────────────────────────────────
+// 🎵 /song — YouTube → audio
+// ─────────────────────────────────────────
+app.get("/song", async (req, res) => {
+  const url = req.query.url;
+  if (!url) return fail(res, "URL required");
 
+  const race = await raceAPIs(PROVIDERS.song.map(p => ({ name: p.name, fn: () => p.fn(url) })));
+  if (!race) return fail(res, "Audio extraction failed");
+
+  return ok(res, req, { source: race.source, url: race.result });
+});
+
+// ─────────────────────────────────────────
+// ▶️ /play — Search + download audio
+// ─────────────────────────────────────────
+app.get("/play", async (req, res) => {
+  const input = req.query.q || req.query.url;
+  if (!input) return fail(res, "Query or URL required");
+
+  try {
     let video;
 
-    // =======================
-    // IF YOUTUBE URL
-    // =======================
-
-    if (
-      input.includes("youtube.com") ||
-      input.includes("youtu.be")
-    ) {
-
-      video = {
-        title: "YouTube Audio",
-        url: input,
-        videoId: null,
-        duration: null,
-        views: null,
-        uploaded: null,
-        thumbnail: null,
-        author: {
-          name: null
-        }
-      };
-
+    if (input.includes("youtube.com") || input.includes("youtu.be")) {
+      video = { title: "YouTube Audio", url: input, videoId: null, duration: null, thumbnail: null, author: {} };
     } else {
-
-      // =======================
-      // SEARCH VIDEO
-      // =======================
-
-      const searchRes = await axios.get(
-        `https://rabbitapi.nett.to/search/youtube?q=${encodeURIComponent(input)}&limit=1`
-      );
-
-      video = searchRes.data.result[0];
-
+      const search = await yts(input);
+      video = search.videos[0];
     }
 
-    if (!video) {
+    if (!video) return fail(res, "No video found");
 
-      return res.json({
-        status: false,
-        creator: CREATOR,
-        message: "No result found"
-      });
+    const race = await raceAPIs(PROVIDERS.song.map(p => ({ name: p.name, fn: () => p.fn(video.url) })));
+    if (!race) return fail(res, "Audio extraction failed");
 
-    }
-
-    // =======================
-    // AUDIO API
-    // =======================
-
-    const audioRes = await axios.get(
-      `https://rabbitapi.nett.to/api/song?url=${encodeURIComponent(video.url)}`
-    );
-
-    const audioUrl =
-      audioRes?.data?.payload?.result?.audio ||
-      audioRes?.data?.result?.audio ||
-      audioRes?.data?.result ||
-      null;
-
-    if (!audioUrl) {
-
-      return res.json({
-        status: false,
-        creator: CREATOR,
-        message: "Audio fetch failed"
-      });
-
-    }
-
-    // =======================
-    // RESPONSE
-    // =======================
-
-    res.json({
-
-      status: true,
-
-      creator: CREATOR,
-
-      baseUrl,
-
+    return ok(res, req, {
+      source: race.source,
       query: input,
-
       result: {
-
         title: video.title,
-
         videoId: video.videoId,
-
-        duration: video.duration,
-
+        duration: video.timestamp || video.duration,
         views: video.views,
-
-        uploaded: video.uploaded,
-
+        uploaded: video.ago || video.uploaded,
         thumbnail: video.thumbnail,
-
-        url: audioUrl,
-
-        author: {
-          name: video.author?.name
-        }
-
-      }
-
-    });
-
-  } catch (e) {
-
-    res.status(500).json({
-
-      status: false,
-
-      creator: CREATOR,
-
-      error: e.message
-
-    });
-
-  }
-
-});
-
-
-
-// =======================
-// 🎵 Song
-// =======================
-app.get("/api/song", async (req, res) => {
-  try {
-    const { url } = req.query;
-    if (!url) return res.status(400).json({ status: false, creator: CREATOR });
-
-    const baseUrl = `${req.protocol}://${req.get("host")}`;
-
-    const { data } = await axios.get(
-      `https://apiskeith.top/download/audio?url=${encodeURIComponent(url)}`
-    );
-
-    res.json({
-      status: true,
-      creator: CREATOR,
-      baseUrl,
-      result: {
-        audio: data.result,
-        url: data.result,
-        song: data.result,
+        author: { name: video.author?.name },
+        url: race.result
       }
     });
 
-  } catch {
-    res.json({ status: false, creator: CREATOR });
-  }
-});
-
-
-// =======================
-// 🖼️ Image Search
-// =======================
-app.get("/api/image", async (req, res) => {
-  try {
-    const { query } = req.query;
-    if (!query) return res.status(400).json({ status: false, creator: CREATOR });
-
-    const baseUrl = `${req.protocol}://${req.get("host")}`;
-
-    const { data } = await axios.get(
-      `https://apiskeith.top/search/images?query=${encodeURIComponent(query)}`
-    );
-
-    res.json({
-      status: true,
-      creator: CREATOR,
-      baseUrl,
-      total: data.result.length,
-      result: data.result
-    });
-
-  } catch {
-    res.json({ status: false, creator: CREATOR });
-  }
-});
-
-
-// =======================
-// 🎥 YouTube Downloader
-// =======================
-app.get("/api/ytmp4", async (req, res) => {
-  try {
-    const { url } = req.query;
-
-    // url check
-    if (!url) {
-      return res.status(400).json({
-        status: false,
-        creator: CREATOR,
-        message: "YouTube URL is required"
-      });
-    }
-
-    const baseUrl = `${req.protocol}://${req.get("host")}`;
-
-    // fetch api
-    const { data } = await axios.get(
-      `https://bunny-allsocal-downv2.vercel.app/api/download?url=${encodeURIComponent(url)}`
-    );
-
-    // best video qualities
-    const mp4_360 =
-      data.videos.find(v => v.quality.includes("360p") && v.extension === "mp4");
-
-    const mp4_720 =
-      data.videos.find(v => v.quality.includes("720p") && v.extension === "mp4");
-
-    const mp4_1080 =
-      data.videos.find(v => v.quality.includes("1080p") && v.extension === "mp4");
-
-    // best audio
-    const audio =
-      data.audios.find(a => a.quality.includes("131kb"));
-
-    // styled response
-    res.json({
-      status: true,
-      creator: CREATOR,
-      baseUrl,
-
-      metadata: {
-        title: data.title,
-        thumbnail: data.thumbnail,
-        duration: data.duration
-      },
-
-      download: {
-        video: {
-          "360p": mp4_360
-            ? {
-                quality: mp4_360.quality,
-                type: mp4_360.extension,
-                url: mp4_360.url
-              }
-            : null,
-
-          "720p": mp4_720
-            ? {
-                quality: mp4_720.quality,
-                type: mp4_720.extension,
-                url: mp4_720.url
-              }
-            : null,
-
-          "1080p": mp4_1080
-            ? {
-                quality: mp4_1080.quality,
-                type: mp4_1080.extension,
-                url: mp4_1080.url
-              }
-            : null
-        },
-
-        audio: audio
-          ? {
-              quality: audio.quality,
-              type: audio.extension,
-              url: audio.url
-            }
-          : null
-      }
-    });
-
-  } catch (err) {
-    console.log(err);
-
-    res.status(500).json({
-      status: false,
-      creator: CREATOR,
-      message: "Internal Server Error"
-    });
-  }
-});
-
-//Instagram 2
-
-app.get("/api/insta2", async (req, res) => {
-  try {
-    const { url } = req.query;
-
-    if (!url) {
-      return res.json({ status: false, creator: CREATOR });
-    }
-
-    const baseUrl = `${req.protocol}://${req.get("host")}`;
-
-    const { data } = await axios.get(
-      `https://api-aswin-sparky.koyeb.app/api/downloader/igdl?url=${encodeURIComponent(url)}`
-    );
-
-    res.json({
-      status: true,
-      creator: CREATOR,
-      quality: data.quality,
-      ext: data.ext,
-      baseUrl,
-      thumbnail: data.data[0].thumbnail,
-      url: data.data[0].url
-    });
-
   } catch (e) {
-    res.json({
-      status: false,
-      creator: CREATOR,
-      error: e.message
-    });
+    return fail(res, e.message);
   }
 });
 
-// =======================
-// =======================
-// 🎵 Spotify Search
-// =======================
-app.get("/search/spotify", async (req, res) => {
-  try {
-    const { q, limit } = req.query;
+// ─────────────────────────────────────────
+// 📌 /pinterest — Pinterest downloader
+// ─────────────────────────────────────────
+app.get("/pinterest", async (req, res) => {
+  const url = req.query.url;
+  if (!url) return fail(res, "URL required");
 
-    // query check
-    if (!q) {
-      return res.status(400).json({
-        status: false,
-        creator: CREATOR,
-        message: "Query is required"
-      });
-    }
+  const race = await raceAPIs(PROVIDERS.pinterest.map(p => ({ name: p.name, fn: () => p.fn(url) })));
+  if (!race) return fail(res, "Pinterest download failed");
 
-    const baseUrl = `${req.protocol}://${req.get("host")}`;
-
-    // fetch spotify search
-    const { data } = await axios.get(
-      `https://jerrycoder.oggyapi.workers.dev/search/spotify?q=${encodeURIComponent(q)}&limit=${limit || 15}`
-    );
-
-    // response
-    res.json({
-      status: true,
-      creator: CREATOR,
-      baseUrl,
-      query: q,
-      total: data.tracks?.length || 0,
-      result: data.tracks || []
-    });
-
-  } catch (err) {
-    console.log(err);
-
-    res.status(500).json({
-      status: false,
-      creator: CREATOR,
-      message: "Internal Server Error"
-    });
-  }
+  return ok(res, req, { source: race.source, result: race.result });
 });
 
+// ─────────────────────────────────────────
+// 🎵 /spotify — Spotify downloader
+// ─────────────────────────────────────────
+app.get("/spotify", async (req, res) => {
+  const url = req.query.url;
+  if (!url) return fail(res, "URL required");
 
+  const race = await raceAPIs(PROVIDERS.spotify.map(p => ({ name: p.name, fn: () => p.fn(url) })));
+  if (!race) return fail(res, "Spotify download failed");
 
-// =======================
-// 🎵 Spotify Download
-// =======================
-app.get("/api/spotify", async (req, res) => {
-  try {
-    const { url } = req.query;
-
-    // url check
-    if (!url) {
-      return res.status(400).json({
-        status: false,
-        creator: CREATOR,
-        message: "Spotify URL is required"
-      });
-    }
-
-    const baseUrl = `${req.protocol}://${req.get("host")}`;
-
-    // fetch spotify download
-    const { data } = await axios.get(
-      `https://jerrycoder.oggyapi.workers.dev/down/spotify?url=${encodeURIComponent(url)}`
-    );
-
-    // response
-    res.json({
-      status: true,
-      creator: CREATOR,
-      baseUrl,
-      title: data.title,
-      artist: data.artist,
-      duration: data.duration,
-      thumbnail: data.thumbnail,
-      url: data.download_link
-    });
-
-  } catch (err) {
-    console.log(err);
-
-    res.status(500).json({
-      status: false,
-      creator: CREATOR,
-      message: "Internal Server Error"
-    });
-  }
+  return ok(res, req, { source: race.source, result: race.result });
 });
 
-
-
-
-// =======================
-// 📌 Pinterest Search
-// =======================
-app.get("/search/pinterest", async (req, res) => {
-  try {
-    const { q, type, limit } = req.query;
-
-    // query check
-    if (!q) {
-      return res.status(400).json({
-        status: false,
-        creator: CREATOR,
-        message: "Query is required"
-      });
-    }
-
-    const baseUrl = `${req.protocol}://${req.get("host")}`;
-
-    // default values
-    const searchType = type || "both";
-    const searchLimit = limit || 10;
-
-    // fetch pinterest search
-    const { data } = await axios.get(
-      `https://jerrycoder.oggyapi.workers.dev/search/pin?q=${encodeURIComponent(q)}&type=${searchType}&limit=${searchLimit}`
-    );
-
-    // response
-    res.json({
-      status: true,
-      creator: CREATOR,
-      baseUrl,
-      query: q,
-      type: data.type,
-      total: data.total,
-      result: data.result
-    });
-
-  } catch (err) {
-    console.log(err);
-
-    res.status(500).json({
-      status: false,
-      creator: CREATOR
-    });
-  }
-});
-
-
-// =======================
-// 🎵 Pinterest Download 
-// =======================
-app.get("/api/pinterest", async (req, res) => {
-  try {
-    const { url } = req.query;
-
-    // url check
-    if (!url) {
-      return res.status(400).json({
-        status: false,
-        creator: CREATOR,
-        message: "Pinterest URL is required"
-      });
-    }
-
-    const baseUrl = `${req.protocol}://${req.get("host")}`;
-
-    // fetch spotify download
-    const { data } = await axios.get(
-      `https://jerrycoder.oggyapi.workers.dev/down/pinterest?url=${encodeURIComponent(url)}`
-    );
-
-    // response
-    res.json({
-      status: true,
-      creator: CREATOR,
-      baseUrl,
-      title: data.title,
-      author: data.author,
-      thumbnail: data.thumbnail,
-      url: data.url
-    });
-
-  } catch (err) {
-    console.log(err);
-
-    res.status(500).json({
-      status: false,
-      creator: CREATOR,
-      message: "Internal Server Error"
-    });
-  }
-});
-
-
-//Pinterest 
-app.get("/api/pint", async (req, res) => {
-  try {
-    const { url } = req.query;
-
-    if (!url) {
-      return res.json({
-        status: false,
-        creator: CREATOR
-      });
-    }
-
-    const baseUrl = `${req.protocol}://${req.get("host")}`;
-
-    const { data } = await axios.get(
-      `https://apis.davidcyril.name.ng/download/pinterest?url=${encodeURIComponent(url)}`
-    );
-
-    if (!data.success) {
-      return res.json({
-        status: false,
-        creator: CREATOR,
-        error: "Failed to fetch Pinterest media"
-      });
-    }
-
-    const medias = data.data.medias || [];
-
-    // mp4 media select
-    const video =
-      medias.find(v => v.extension === "mp4") || medias[0];
-
-    res.json({
-      status: true,
-      creator: CREATOR,
-      title: data.data.title,
-      thumbnail: data.data.thumbnail,
-      quality: video.quality,
-      ext: video.extension,
-      size: video.formattedSize,
-      baseUrl,
-      url: video.url
-    });
-
-  } catch (e) {
-    res.json({
-      status: false,
-      creator: CREATOR,
-      error: e.message
-    });
-  }
-});
-
-
-
-// =======================
-// 🖼️ Google Image Search
-// =======================
-
-async function googleScrape(query, limit = 10) {
-
-  const { data } = await axios.get(
-    `https://www.google.com/search?tbm=isch&q=${encodeURIComponent(query)}`,
-    {
-      headers: {
-        "User-Agent": "Mozilla/5.0"
-      },
-      timeout: 5000
-    }
-  );
-
-  const $ = cheerio.load(data);
-
-  let results = [];
-
-  $("img").each((i, el) => {
-
-    const img = $(el).attr("src");
-
-    if (
-      img &&
-      img.startsWith("http") &&
-      !results.includes(img)
-    ) {
-      results.push(img);
-    }
-
-  });
-
-  return results.slice(0, limit);
-}
-
-
-// fallback
-function gisSearch(query, limit = 10) {
-
-  return new Promise((resolve, reject) => {
-
-    gis(query, (err, results) => {
-
-      if (err) return reject(err);
-
-      const data = results
-        .map(v => v.url)
-        .filter(v => v && v.startsWith("http"))
-        .slice(0, limit);
-
-      resolve(data);
-
-    });
-
-  });
-
-}
-
-
-
-app.get("/api/image", async (req, res) => {
-
-  try {
-
-    const { q, limit } = req.query;
-
-    if (!q) {
-      return res.status(400).json({
-        status: false,
-        creator: CREATOR,
-        message: "Query required"
-      });
-    }
-
-    const baseUrl = `${req.protocol}://${req.get("host")}`;
-
-    let result = [];
-    let source = "google-scrape";
-
-    try {
-
-      // fast method
-      result = await googleScrape(
-        q,
-        Number(limit) || 10
-      );
-
-      if (!result.length) {
-        throw new Error("No results");
-      }
-
-    } catch {
-
-      // fallback
-      source = "gis-fallback";
-
-      result = await gisSearch(
-        q,
-        Number(limit) || 10
-      );
-
-    }
-
-    res.json({
-      status: true,
-      creator: CREATOR,
-      baseUrl,
-      query: q,
-      source,
-      total: result.length,
-      result
-    });
-
-  } catch (e) {
-
-    res.status(500).json({
-      status: false,
-      creator: CREATOR,
-      error: e.message
-    });
-
-  }
-
-});
-
-
-
-
-
-
-// Fixed Pinterest 
-
-
-app.get("/api/pint", async (req, res) => {
-  try {
-    const { url } = req.query;
-
-    if (!url) {
-      return res.json({ status: false, creator: CREATOR });
-    }
-
-    const baseUrl = `${req.protocol}://${req.get("host")}`;
-
-    const { data } = await axios.get(
-      `https://apis.davidcyril.name.ng/download/pinterest?url=${encodeURIComponent(url)}`
-    );
-
-    res.json({
-      status: true,
-      creator: CREATOR,
-      quality: data.quality,
-      ext: data.ext,
-      quality: data.quality,
-      
-      baseUrl,
-      url: data.url || data
-    });
-
-  } catch (e) {
-    res.json({
-      status: false,
-      creator: CREATOR,
-      error: e.message
-    });
-  }
-});
-
-
-// =======================
-// ▶️ YouTube Search
-// =======================
-
+// ─────────────────────────────────────────
+// 🔍 /search/youtube — YouTube search
+// ─────────────────────────────────────────
 app.get("/search/youtube", async (req, res) => {
+  const q = req.query.q || req.query.query;
+  const limit = parseInt(req.query.limit) || 10;
+  if (!q) return fail(res, "Query required");
 
   try {
+    const search = await yts(q);
+    const videos = search.videos.slice(0, limit).map((v, i) => ({
+      id: i + 1,
+      title: v.title,
+      url: v.url,
+      videoId: v.videoId,
+      duration: v.timestamp,
+      views: v.views,
+      uploaded: v.ago,
+      thumbnail: v.thumbnail,
+      author: { name: v.author.name, url: v.author.url }
+    }));
 
-    const {
-      query,
-      q,
-      limit
-    } = req.query;
-
-    // support both q= and query=
-    const searchQuery = query || q;
-
-    // default limit
-    const searchLimit = parseInt(limit) || 10;
-
-    // validation
-    if (!searchQuery) {
-
-      return res.status(400).json({
-        status: false,
-        creator: CREATOR,
-        message: "Enter query",
-        example: "/search/youtube?q=alan walker&limit=5"
-      });
-
-    }
-
-    const baseUrl = `${req.protocol}://${req.get("host")}`;
-
-    // search
-    const search = await yts(searchQuery);
-
-    const videos = search.videos
-      .slice(0, searchLimit)
-      .map((v, i) => ({
-
-        id: i + 1,
-
-        title: v.title,
-
-        url: v.url,
-
-        videoId: v.videoId,
-
-        duration: v.timestamp,
-
-        views: v.views,
-
-        uploaded: v.ago,
-
-        thumbnail: v.thumbnail,
-
-        author: {
-          name: v.author.name,
-          url: v.author.url
-        }
-
-      }));
-
-    // response
-    res.json({
-
-      status: true,
-
-      creator: CREATOR,
-
-      baseUrl,
-
-      query: searchQuery,
-
-      total: videos.length,
-
-      limit: searchLimit,
-
-      result: videos
-
-    });
-
+    return ok(res, req, { query: q, total: videos.length, result: videos });
   } catch (e) {
-
-    res.status(500).json({
-
-      status: false,
-
-      creator: CREATOR,
-
-      error: e.message
-
-    });
-
+    return fail(res, e.message);
   }
-
 });
 
+// ─────────────────────────────────────────
+// 🎵 /search/spotify — Spotify search
+// ─────────────────────────────────────────
+app.get("/search/spotify", async (req, res) => {
+  const q = req.query.q;
+  const limit = req.query.limit || 15;
+  if (!q) return fail(res, "Query required");
 
-
-// ======================
-// 🎤 Lyrics
-// =======================
-app.get("/api/lyrics", async (req, res) => {
   try {
-    const { song } = req.query;
-    if (!song) return res.status(400).json({ status: false, creator: CREATOR });
+    const { data } = await axios.get(
+      `https://jerrycoder.oggyapi.workers.dev/search/spotify?q=${encodeURIComponent(q)}&limit=${limit}`
+    );
+    return ok(res, req, { query: q, total: data.tracks?.length || 0, result: data.tracks || [] });
+  } catch (e) {
+    return fail(res, e.message);
+  }
+});
 
-    const baseUrl = `${req.protocol}://${req.get("host")}`;
+// ─────────────────────────────────────────
+// 📌 /search/pinterest — Pinterest search
+// ─────────────────────────────────────────
+app.get("/search/pinterest", async (req, res) => {
+  const { q, type = "both", limit = 10 } = req.query;
+  if (!q) return fail(res, "Query required");
 
+  try {
+    const { data } = await axios.get(
+      `https://jerrycoder.oggyapi.workers.dev/search/pin?q=${encodeURIComponent(q)}&type=${type}&limit=${limit}`
+    );
+    return ok(res, req, { query: q, type: data.type, total: data.total, result: data.result });
+  } catch (e) {
+    return fail(res, e.message);
+  }
+});
+
+// ─────────────────────────────────────────
+// 🎤 /lyrics — Song lyrics
+// ─────────────────────────────────────────
+app.get("/lyrics", async (req, res) => {
+  const song = req.query.song || req.query.q;
+  if (!song) return fail(res, "Song name required");
+
+  try {
     const { data } = await axios.get(
       `https://apis.davidcyril.name.ng/lyrics3?song=${encodeURIComponent(song)}`
     );
-
-    res.json({
-      status: true,
-      creator: CREATOR,
-      baseUrl,
-      result: data.result
-    });
-
-  } catch {
-    res.json({ status: false, creator: CREATOR });
+    return ok(res, req, { result: data.result });
+  } catch (e) {
+    return fail(res, e.message);
   }
 });
 
+// ─────────────────────────────────────────
+// 🌍 /all — UNIVERSAL DOWNLOADER
+// Auto-detects platform from any URL
+// ─────────────────────────────────────────
+app.get("/all", async (req, res) => {
+  const url = req.query.url;
+  if (!url) return fail(res, "URL required. Supports: Instagram, Facebook, YouTube, Pinterest, Spotify");
 
-// 🚀 Start
+  const platform = detectPlatform(url);
+  if (!platform) {
+    return res.status(400).json({
+      status: false,
+      creator: CREATOR,
+      message: "Unsupported platform",
+      supported: ["instagram", "facebook", "youtube", "pinterest", "spotify"]
+    });
+  }
+
+  const providers = PROVIDERS[platform];
+  if (!providers) return fail(res, "No providers for this platform");
+
+  const race = await raceAPIs(providers.map(p => ({ name: p.name, fn: () => p.fn(url) })));
+  if (!race) return fail(res, `All ${platform} APIs failed`);
+
+  return ok(res, req, { platform, source: race.source, result: race.result });
+});
+
+// ─────────────────────────────────────────
+// 📋 /routes — List all available endpoints
+// ─────────────────────────────────────────
+app.get("/routes", (req, res) => {
+  const baseUrl = `${req.protocol}://${req.get("host")}`;
+  res.json({
+    status: true,
+    creator: CREATOR,
+    baseUrl,
+    endpoints: {
+      universal: { "/all": "Auto-detect platform & download (url=)" },
+      downloaders: {
+        "/insta": "Instagram (url=)",
+        "/fb": "Facebook (url=)",
+        "/ytmp4": "YouTube video (url=)",
+        "/song": "YouTube audio (url=)",
+        "/play": "Search + audio (q= or url=)",
+        "/spotify": "Spotify (url=)",
+        "/pinterest": "Pinterest (url=)"
+      },
+      search: {
+        "/search/youtube": "YouTube search (q=, limit=)",
+        "/search/spotify": "Spotify search (q=, limit=)",
+        "/search/pinterest": "Pinterest search (q=, type=, limit=)"
+      },
+      misc: {
+        "/lyrics": "Song lyrics (song=)"
+      }
+    }
+  });
+});
+
+// ─────────────────────────────────────────
+// 🚀 Start Server
+// ─────────────────────────────────────────
 app.listen(PORT, () => {
-  console.log("Server running on port " + PORT);
+  console.log(`✅ Server running → http://localhost:${PORT}`);
+  console.log(`📋 Routes list  → http://localhost:${PORT}/routes`);
 });
