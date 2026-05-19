@@ -10,15 +10,14 @@ app.use(express.json());
 const CREATOR = "𓋜 -𝐑ᴀ፝֟፝֟ʙʙɪᴛ/>𝟑ن𓂃";
 
 // ─────────────────────────────────────────
-// 🔧 CORE UTILITY: Race multiple APIs
-// First one to succeed wins. If all fail → null
+// 🔧 CORE: Race multiple APIs
 // ─────────────────────────────────────────
 async function raceAPIs(providers) {
   return new Promise((resolve) => {
     let settled = false;
     let failed = 0;
 
-    providers.forEach(async ({ name, fn }) => {
+    providers.forEach(async ({ fn }) => {
       try {
         const result = await fn();
         if (!settled && result != null) {
@@ -38,8 +37,8 @@ async function raceAPIs(providers) {
 }
 
 // ─────────────────────────────────────────
-// 📦 API PROVIDERS REGISTRY
-// Add new providers here — auto-detected
+// 📦 PROVIDERS REGISTRY
+// Naya provider add korte shudhu ekhane object add koro
 // ─────────────────────────────────────────
 const PROVIDERS = {
 
@@ -47,7 +46,7 @@ const PROVIDERS = {
     {
       name: "faa",
       fn: (url) => axios.get(`https://api-faa.my.id/faa/igdl?url=${encodeURIComponent(url)}`)
-        .then(r => r.data?.result)
+        .then(r => r.data?.result || null)
     },
     {
       name: "aswin",
@@ -150,7 +149,6 @@ const PROVIDERS = {
 
 // ─────────────────────────────────────────
 // 🌐 DETECT PLATFORM FROM URL
-// Used by /all universal endpoint
 // ─────────────────────────────────────────
 function detectPlatform(url) {
   if (/instagram\.com/.test(url)) return "instagram";
@@ -162,7 +160,7 @@ function detectPlatform(url) {
 }
 
 // ─────────────────────────────────────────
-// 🧩 RESPONSE HELPER
+// 🧩 RESPONSE HELPERS
 // ─────────────────────────────────────────
 function ok(res, req, data) {
   return res.json({
@@ -174,7 +172,11 @@ function ok(res, req, data) {
 }
 
 function fail(res, msg = "Failed") {
-  return res.status(500).json({ status: false, creator: CREATOR, message: msg });
+  return res.status(500).json({
+    status: false,
+    creator: CREATOR,
+    message: msg
+  });
 }
 
 // ─────────────────────────────────────────
@@ -185,45 +187,48 @@ app.get("/", (req, res) => {
 });
 
 // ─────────────────────────────────────────
-// 📸 /insta — Instagram downloader
+// 📸 /api/insta
 // ─────────────────────────────────────────
-app.get("/insta", async (req, res) => {
+app.get("/api/insta", async (req, res) => {
   const url = req.query.url;
   if (!url) return fail(res, "URL required");
 
-  const race = await raceAPIs(PROVIDERS.instagram.map(p => ({ name: p.name, fn: () => p.fn(url) })));
+  const race = await raceAPIs(PROVIDERS.instagram.map(p => ({ fn: () => p.fn(url) })));
   if (!race) return fail(res, "All Instagram APIs failed");
 
-  return ok(res, req, { source: race.source, result: race.result });
+  return ok(res, req, { result: race.result });
 });
 
 // ─────────────────────────────────────────
-// 📘 /fb — Facebook downloader
+// 📘 /api/fb
 // ─────────────────────────────────────────
-app.get("/fb", async (req, res) => {
+app.get("/api/fb", async (req, res) => {
   const url = req.query.url;
   if (!url) return fail(res, "URL required");
 
-  const race = await raceAPIs(PROVIDERS.facebook.map(p => ({ name: p.name, fn: () => p.fn(url) })));
+  const race = await raceAPIs(PROVIDERS.facebook.map(p => ({ fn: () => p.fn(url) })));
   if (!race) return fail(res, "All Facebook APIs failed");
 
-  return ok(res, req, { source: race.source, result: race.result });
+  return ok(res, req, { result: race.result });
 });
 
 // ─────────────────────────────────────────
-// 🎥 /ytmp4 — YouTube video downloader
+// 🎥 /api/ytmp4
 // ─────────────────────────────────────────
-app.get("/ytmp4", async (req, res) => {
+app.get("/api/ytmp4", async (req, res) => {
   const url = req.query.url;
   if (!url) return fail(res, "URL required");
 
-  const race = await raceAPIs(PROVIDERS.youtube_video.map(p => ({ name: p.name, fn: () => p.fn(url) })));
+  const race = await raceAPIs(PROVIDERS.youtube_video.map(p => ({ fn: () => p.fn(url) })));
   if (!race) return fail(res, "YouTube download failed");
 
   const d = race.result;
   return ok(res, req, {
-    source: race.source,
-    metadata: { title: d.title, thumbnail: d.thumbnail, duration: d.duration },
+    metadata: {
+      title: d.title,
+      thumbnail: d.thumbnail,
+      duration: d.duration
+    },
     download: {
       "360p": d["360p"] ? { quality: d["360p"].quality, url: d["360p"].url } : null,
       "720p": d["720p"] ? { quality: d["720p"].quality, url: d["720p"].url } : null,
@@ -234,22 +239,22 @@ app.get("/ytmp4", async (req, res) => {
 });
 
 // ─────────────────────────────────────────
-// 🎵 /song — YouTube → audio
+// 🎵 /api/song
 // ─────────────────────────────────────────
-app.get("/song", async (req, res) => {
+app.get("/api/song", async (req, res) => {
   const url = req.query.url;
   if (!url) return fail(res, "URL required");
 
-  const race = await raceAPIs(PROVIDERS.song.map(p => ({ name: p.name, fn: () => p.fn(url) })));
+  const race = await raceAPIs(PROVIDERS.song.map(p => ({ fn: () => p.fn(url) })));
   if (!race) return fail(res, "Audio extraction failed");
 
-  return ok(res, req, { source: race.source, url: race.result });
+  return ok(res, req, { url: race.result });
 });
 
 // ─────────────────────────────────────────
-// ▶️ /play — Search + download audio
+// ▶️ /api/play
 // ─────────────────────────────────────────
-app.get("/play", async (req, res) => {
+app.get("/api/play", async (req, res) => {
   const input = req.query.q || req.query.url;
   if (!input) return fail(res, "Query or URL required");
 
@@ -265,11 +270,10 @@ app.get("/play", async (req, res) => {
 
     if (!video) return fail(res, "No video found");
 
-    const race = await raceAPIs(PROVIDERS.song.map(p => ({ name: p.name, fn: () => p.fn(video.url) })));
+    const race = await raceAPIs(PROVIDERS.song.map(p => ({ fn: () => p.fn(video.url) })));
     if (!race) return fail(res, "Audio extraction failed");
 
     return ok(res, req, {
-      source: race.source,
       query: input,
       result: {
         title: video.title,
@@ -289,33 +293,33 @@ app.get("/play", async (req, res) => {
 });
 
 // ─────────────────────────────────────────
-// 📌 /pinterest — Pinterest downloader
+// 📌 /api/pinterest
 // ─────────────────────────────────────────
-app.get("/pinterest", async (req, res) => {
+app.get("/api/pinterest", async (req, res) => {
   const url = req.query.url;
   if (!url) return fail(res, "URL required");
 
-  const race = await raceAPIs(PROVIDERS.pinterest.map(p => ({ name: p.name, fn: () => p.fn(url) })));
+  const race = await raceAPIs(PROVIDERS.pinterest.map(p => ({ fn: () => p.fn(url) })));
   if (!race) return fail(res, "Pinterest download failed");
 
-  return ok(res, req, { source: race.source, result: race.result });
+  return ok(res, req, { result: race.result });
 });
 
 // ─────────────────────────────────────────
-// 🎵 /spotify — Spotify downloader
+// 🎵 /api/spotify
 // ─────────────────────────────────────────
-app.get("/spotify", async (req, res) => {
+app.get("/api/spotify", async (req, res) => {
   const url = req.query.url;
   if (!url) return fail(res, "URL required");
 
-  const race = await raceAPIs(PROVIDERS.spotify.map(p => ({ name: p.name, fn: () => p.fn(url) })));
+  const race = await raceAPIs(PROVIDERS.spotify.map(p => ({ fn: () => p.fn(url) })));
   if (!race) return fail(res, "Spotify download failed");
 
-  return ok(res, req, { source: race.source, result: race.result });
+  return ok(res, req, { result: race.result });
 });
 
 // ─────────────────────────────────────────
-// 🔍 /search/youtube — YouTube search
+// 🔍 /search/youtube
 // ─────────────────────────────────────────
 app.get("/search/youtube", async (req, res) => {
   const q = req.query.q || req.query.query;
@@ -343,7 +347,7 @@ app.get("/search/youtube", async (req, res) => {
 });
 
 // ─────────────────────────────────────────
-// 🎵 /search/spotify — Spotify search
+// 🎵 /search/spotify
 // ─────────────────────────────────────────
 app.get("/search/spotify", async (req, res) => {
   const q = req.query.q;
@@ -361,7 +365,7 @@ app.get("/search/spotify", async (req, res) => {
 });
 
 // ─────────────────────────────────────────
-// 📌 /search/pinterest — Pinterest search
+// 📌 /search/pinterest
 // ─────────────────────────────────────────
 app.get("/search/pinterest", async (req, res) => {
   const { q, type = "both", limit = 10 } = req.query;
@@ -378,9 +382,9 @@ app.get("/search/pinterest", async (req, res) => {
 });
 
 // ─────────────────────────────────────────
-// 🎤 /lyrics — Song lyrics
+// 🎤 /api/lyrics
 // ─────────────────────────────────────────
-app.get("/lyrics", async (req, res) => {
+app.get("/api/lyrics", async (req, res) => {
   const song = req.query.song || req.query.q;
   if (!song) return fail(res, "Song name required");
 
@@ -395,12 +399,18 @@ app.get("/lyrics", async (req, res) => {
 });
 
 // ─────────────────────────────────────────
-// 🌍 /all — UNIVERSAL DOWNLOADER
-// Auto-detects platform from any URL
+// 🌍 /api/all — Universal downloader
 // ─────────────────────────────────────────
-app.get("/all", async (req, res) => {
+app.get("/api/all", async (req, res) => {
   const url = req.query.url;
-  if (!url) return fail(res, "URL required. Supports: Instagram, Facebook, YouTube, Pinterest, Spotify");
+  if (!url) {
+    return res.status(400).json({
+      status: false,
+      creator: CREATOR,
+      message: "URL required",
+      supported: ["instagram", "facebook", "youtube", "pinterest", "spotify"]
+    });
+  }
 
   const platform = detectPlatform(url);
   if (!platform) {
@@ -415,31 +425,33 @@ app.get("/all", async (req, res) => {
   const providers = PROVIDERS[platform];
   if (!providers) return fail(res, "No providers for this platform");
 
-  const race = await raceAPIs(providers.map(p => ({ name: p.name, fn: () => p.fn(url) })));
+  const race = await raceAPIs(providers.map(p => ({ fn: () => p.fn(url) })));
   if (!race) return fail(res, `All ${platform} APIs failed`);
 
-  return ok(res, req, { platform, source: race.source, result: race.result });
+  return ok(res, req, { platform, result: race.result });
 });
 
 // ─────────────────────────────────────────
-// 📋 /routes — List all available endpoints
+// 📋 /api/routes — All endpoints list
 // ─────────────────────────────────────────
-app.get("/routes", (req, res) => {
+app.get("/api/routes", (req, res) => {
   const baseUrl = `${req.protocol}://${req.get("host")}`;
   res.json({
     status: true,
     creator: CREATOR,
     baseUrl,
     endpoints: {
-      universal: { "/all": "Auto-detect platform & download (url=)" },
+      universal: {
+        "/api/all": "Auto-detect platform & download (url=)"
+      },
       downloaders: {
-        "/insta": "Instagram (url=)",
-        "/fb": "Facebook (url=)",
-        "/ytmp4": "YouTube video (url=)",
-        "/song": "YouTube audio (url=)",
-        "/play": "Search + audio (q= or url=)",
-        "/spotify": "Spotify (url=)",
-        "/pinterest": "Pinterest (url=)"
+        "/api/insta": "Instagram (url=)",
+        "/api/fb": "Facebook (url=)",
+        "/api/ytmp4": "YouTube video (url=)",
+        "/api/song": "YouTube audio (url=)",
+        "/api/play": "Search + audio (q= or url=)",
+        "/api/spotify": "Spotify (url=)",
+        "/api/pinterest": "Pinterest (url=)"
       },
       search: {
         "/search/youtube": "YouTube search (q=, limit=)",
@@ -447,7 +459,7 @@ app.get("/routes", (req, res) => {
         "/search/pinterest": "Pinterest search (q=, type=, limit=)"
       },
       misc: {
-        "/lyrics": "Song lyrics (song=)"
+        "/api/lyrics": "Song lyrics (song=)"
       }
     }
   });
@@ -458,5 +470,5 @@ app.get("/routes", (req, res) => {
 // ─────────────────────────────────────────
 app.listen(PORT, () => {
   console.log(`✅ Server running → http://localhost:${PORT}`);
-  console.log(`📋 Routes list  → http://localhost:${PORT}/routes`);
+  console.log(`📋 Routes list  → http://localhost:${PORT}/api/routes`);
 });
