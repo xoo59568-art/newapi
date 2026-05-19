@@ -17,7 +17,7 @@ const CREATOR = "𓋜 -𝐑ᴀ፝֟፝֟ʙʙɪᴛ/>𝟑ن𓂃";
 // ⚡ ULTRA FAST AXIOS
 // ─────────────────────────────────────────
 const axiosInstance = axios.create({
-  timeout: 5000,
+  timeout: 50000,
 
   httpAgent: new http.Agent({
     keepAlive: true,
