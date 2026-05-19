@@ -104,26 +104,31 @@ const PROVIDERS = {
   ],
 
   song: [
-    {
-      name: "rabbit",
-      fn: (url) => axios.get(`https://rabbitapi.nett.to/api/song?url=${encodeURIComponent(url)}`)
-        .then(r => {
-          const audio = r.data?.payload?.result?.audio || r.data?.result?.audio || r.data?.result;
-          return audio || null;
-        })
-    },
-    {
-      name: "keith",
-      fn: (url) => axios.get(`https://apiskeith.top/download/audio?url=${encodeURIComponent(url)}`)
-        .then(r => r.data?.result || null)
-    },
+  {
+    name: "rabbit",
+    fn: (url) => axios.get(`https://rabbitapi.nett.to/api/song?url=${encodeURIComponent(url)}`)
+      .then(r => {
+        const audio =
+          r.data?.payload?.result?.audio ||
+          r.data?.result?.audio ||
+          r.data?.result;
 
-    {
-      name: "rabbit1",
-      fn: (url) => axios.get(`https://bunny-mp3-fast.vercel.app/api/mp3?url=${encodeURIComponent(url)}`)
-        .then(r => r.data?.download_url || null)
-}
-  ],
+        return audio || null;
+      })
+  },
+
+  {
+    name: "keith",
+    fn: (url) => axios.get(`https://apiskeith.top/download/audio?url=${encodeURIComponent(url)}`)
+      .then(r => r.data?.result || null)
+  },
+
+  {
+    name: "rabbit1",
+    fn: (url) => axios.get(`https://bunny-mp3-fast.vercel.app/api/mp3?url=${encodeURIComponent(url)}`)
+      .then(r => r.data?.download_url || null)
+  }
+],
 
   pinterest: [
     {
