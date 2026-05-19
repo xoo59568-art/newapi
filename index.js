@@ -384,6 +384,7 @@ app.get("/api/song", async (req, res) => {
         quality: data.quality,
         url: data.download,
         mp3: data.download,
+        audio: data.download,
         download: data.download
       }
     });
