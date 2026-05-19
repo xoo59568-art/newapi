@@ -128,6 +128,17 @@ const PROVIDERS = {
     fn: (url) => axios.get(`https://bunny-mp3-fast.vercel.app/api/mp3?url=${encodeURIComponent(url)}`)
       .then(r => r.data?.download_url || null)
   }
+
+    {
+  name: "david",
+  fn: (url) =>
+    axios
+      .get(`https://apis.davidcyril.name.ng/download/savetube?url=${encodeURIComponent(url)}&format=mp3`)
+      .then(r => {
+        const d = r.data?.data;
+        return d?.download_url || null;
+      })
+}
 ],
 
   pinterest: [
