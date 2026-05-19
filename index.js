@@ -404,39 +404,101 @@ app.get("/api/image", async (req, res) => {
 
 
 // =======================
-// 🎤 ytmp4
+// 🎥 YouTube Downloader
 // =======================
-
 app.get("/api/ytmp4", async (req, res) => {
   try {
     const { url } = req.query;
 
+    // url check
     if (!url) {
-      return res.json({ status: false, creator: CREATOR });
+      return res.status(400).json({
+        status: false,
+        creator: CREATOR,
+        message: "YouTube URL is required"
+      });
     }
 
     const baseUrl = `${req.protocol}://${req.get("host")}`;
 
+    // fetch api
     const { data } = await axios.get(
-      `https://apiskeith.top/download/dlmp4?url=${encodeURIComponent(url)}`
+      `https://bunny-allsocal-downv2.vercel.app/api/download?url=${encodeURIComponent(url)}`
     );
 
+    // best video qualities
+    const mp4_360 =
+      data.videos.find(v => v.quality.includes("360p") && v.extension === "mp4");
+
+    const mp4_720 =
+      data.videos.find(v => v.quality.includes("720p") && v.extension === "mp4");
+
+    const mp4_1080 =
+      data.videos.find(v => v.quality.includes("1080p") && v.extension === "mp4");
+
+    // best audio
+    const audio =
+      data.audios.find(a => a.quality.includes("131kb"));
+
+    // styled response
     res.json({
       status: true,
       creator: CREATOR,
       baseUrl,
-      url: data.result || data
+
+      metadata: {
+        title: data.title,
+        thumbnail: data.thumbnail,
+        duration: data.duration
+      },
+
+      download: {
+        video: {
+          "360p": mp4_360
+            ? {
+                quality: mp4_360.quality,
+                type: mp4_360.extension,
+                url: mp4_360.url
+              }
+            : null,
+
+          "720p": mp4_720
+            ? {
+                quality: mp4_720.quality,
+                type: mp4_720.extension,
+                url: mp4_720.url
+              }
+            : null,
+
+          "1080p": mp4_1080
+            ? {
+                quality: mp4_1080.quality,
+                type: mp4_1080.extension,
+                url: mp4_1080.url
+              }
+            : null
+        },
+
+        audio: audio
+          ? {
+              quality: audio.quality,
+              type: audio.extension,
+              url: audio.url
+            }
+          : null
+      }
     });
 
-  } catch (e) {
-    res.json({
+  } catch (err) {
+    console.log(err);
+
+    res.status(500).json({
       status: false,
       creator: CREATOR,
-      error: e.message
+      message: "Internal Server Error"
     });
   }
 });
-
 
 //Instagram 2
 
