@@ -196,8 +196,14 @@ app.get("/api/insta", async (req, res) => {
   const race = await raceAPIs(PROVIDERS.instagram.map(p => ({ fn: () => p.fn(url) })));
   if (!race) return fail(res, "All Instagram APIs failed");
 
-  return ok(res, req, { result: race.result });
+  // /api/insta
+return ok(res, req, {
+  data: {
+    thumbnail: race.result.thumbnail,
+    url: race.result.url
+  }
 });
+    
 
 // ─────────────────────────────────────────
 // 📘 /api/fb
