@@ -352,37 +352,58 @@ app.get("/api/song", async (req, res) => {
       return res.status(400).json({
         status: false,
         creator: CREATOR,
-        message: "Song URL required"
+        message: "YouTube URL required"
       });
     }
 
-    const baseUrl = `${req.protocol}://${req.get("host")}`;
-
+    // Get download URL from upstream API
     const { data } = await axios.get(
-      `https://api-aswin-sparky.koyeb.app/api/downloader/song?search=${encodeURIComponent(url)}`
+      `https://api-aswin-sparky.koyeb.app/api/downloader/song?search=${encodeURIComponent(url)}`,
+      {
+        timeout: 30000,
+        headers: {
+          "User-Agent": "Mozilla/5.0"
+        }
+      }
     );
 
-    if (!data?.data?.url) {
-      return res.json({
+    // Validate
+    if (!data?.status || !data?.data?.url) {
+      return res.status(404).json({
         status: false,
         creator: CREATOR,
         message: "Song not found"
       });
     }
 
-    res.json({
-      status: true,
-      creator: CREATOR,
-      baseUrl,
-      result: {
-        title: data.data.title,
-        audio: data.data.url,
-        download: data.data.url,
-        url: data.data.url
+    const songUrl = data.data.url;
+    const title = data.data.title || "song";
+
+    // Stream MP3
+    const stream = await axios({
+      url: songUrl,
+      method: "GET",
+      responseType: "stream",
+      timeout: 30000,
+      headers: {
+        "User-Agent": "Mozilla/5.0",
+        "Referer": "https://youtube.com/"
       }
     });
 
+    // Headers
+    res.setHeader("Content-Type", "audio/mpeg");
+    res.setHeader(
+      "Content-Disposition",
+      `inline; filename="${title}.mp3"`
+    );
+
+    // Pipe stream
+    stream.data.pipe(res);
+
   } catch (err) {
+    console.log("[SONG API ERROR]", err.message);
+
     res.status(500).json({
       status: false,
       creator: CREATOR,
