@@ -127,6 +127,16 @@ const PROVIDERS = {
         .then(r => r.data?.result || null)
   },
 
+
+  {
+    name: "x",
+    fn: (url) =>
+      axios
+        .get(`https://api-aswin-sparky.koyeb.app/api/downloader/song?search=${encodeURIComponent(url)}`)
+        .then(r => r.data?.url || null)
+  },
+    
+
   {
     name: "rabbit1",
     fn: (url) =>
