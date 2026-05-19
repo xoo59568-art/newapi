@@ -135,6 +135,14 @@ const PROVIDERS = {
         .then(r => r.data?.download_url || null)
   },
 
+{
+  name: "faa",
+  fn: (url) =>
+    axios
+      .get(`https://api-faa.my.id/faa/ytmp3?url=${encodeURIComponent(url)}`)
+      .then(r => r.data?.result?.mp3 || null)
+},
+    
   {
     name: "david",
     fn: (url) =>
