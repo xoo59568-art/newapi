@@ -106,41 +106,46 @@ const PROVIDERS = {
   song: [
   {
     name: "rabbit",
-    fn: (url) => axios.get(`https://rabbitapi.nett.to/api/song?url=${encodeURIComponent(url)}`)
-      .then(r => {
-        const audio =
-          r.data?.payload?.result?.audio ||
-          r.data?.result?.audio ||
-          r.data?.result;
+    fn: (url) =>
+      axios
+        .get(`https://rabbitapi.nett.to/api/song?url=${encodeURIComponent(url)}`)
+        .then(r => {
+          const audio =
+            r.data?.payload?.result?.audio ||
+            r.data?.result?.audio ||
+            r.data?.result;
 
-        return audio || null;
-      })
+          return audio || null;
+        })
   },
 
   {
     name: "keith",
-    fn: (url) => axios.get(`https://apiskeith.top/download/audio?url=${encodeURIComponent(url)}`)
-      .then(r => r.data?.result || null)
+    fn: (url) =>
+      axios
+        .get(`https://apiskeith.top/download/audio?url=${encodeURIComponent(url)}`)
+        .then(r => r.data?.result || null)
   },
 
   {
     name: "rabbit1",
-    fn: (url) => axios.get(`https://bunny-mp3-fast.vercel.app/api/mp3?url=${encodeURIComponent(url)}`)
-      .then(r => r.data?.download_url || null)
+    fn: (url) =>
+      axios
+        .get(`https://bunny-mp3-fast.vercel.app/api/mp3?url=${encodeURIComponent(url)}`)
+        .then(r => r.data?.download_url || null)
   },
 
-    {
-  name: "david",
-  fn: (url) =>
-    axios
-      .get(`https://apis.davidcyril.name.ng/download/savetube?url=${encodeURIComponent(url)}&format=mp3`)
-      .then(r => {
-        const d = r.data?.data;
-        return d?.download_url || null;
-      })
-}
+  {
+    name: "david",
+    fn: (url) =>
+      axios
+        .get(`https://apis.davidcyril.name.ng/download/savetube?url=${encodeURIComponent(url)}&format=mp3`)
+        .then(r => {
+          const d = r.data?.data;
+          return d?.download_url || null;
+        })
+  }
 ],
-
   pinterest: [
     {
       name: "jerry",
