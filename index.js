@@ -343,69 +343,56 @@ app.get("/api/play", async (req, res) => {
 });
 
 
-
 app.get("/api/song", async (req, res) => {
   try {
     const { url } = req.query;
 
     if (!url) {
       return res.status(400).json({
-        status: false,
+        success: false,
         creator: CREATOR,
         message: "YouTube URL required"
       });
     }
 
-    // Get download URL from upstream API
-    const { data } = await axios.get(
-      `https://api-aswin-sparky.koyeb.app/api/downloader/song?search=${encodeURIComponent(url)}`,
-      {
-        timeout: 30000,
-        headers: {
-          "User-Agent": "Mozilla/5.0"
-        }
-      }
-    );
+    // API Request
+    const api = `https://ytmp333-chama-woad.vercel.app/api/ytdl?url=${encodeURIComponent(url)}&format=mp3&_chm=ofc`;
 
-    // Validate
-    if (!data?.status || !data?.data?.url) {
+    const { data } = await axios.get(api, {
+      timeout: 30000,
+      headers: {
+        "User-Agent": "Mozilla/5.0"
+      }
+    });
+
+    // Check response
+    if (!data || !data.success || !data.download) {
       return res.status(404).json({
-        status: false,
+        success: false,
         creator: CREATOR,
         message: "Song not found"
       });
     }
 
-    const songUrl = data.data.url;
-    const title = data.data.title || "song";
-
-    // Stream MP3
-    const stream = await axios({
-      url: songUrl,
-      method: "GET",
-      responseType: "stream",
-      timeout: 30000,
-      headers: {
-        "User-Agent": "Mozilla/5.0",
-        "Referer": "https://youtube.com/"
+    // Normal clean response
+    res.json({
+      success: true,
+      creator: CREATOR,
+      result: {
+        title: data.title,
+        format: data.format,
+        quality: data.quality,
+        url: data.download,
+        mp3: data.download,
+        download: data.download
       }
     });
-
-    // Headers
-    res.setHeader("Content-Type", "audio/mpeg");
-    res.setHeader(
-      "Content-Disposition",
-      `inline; filename="${title}.mp3"`
-    );
-
-    // Pipe stream
-    stream.data.pipe(res);
 
   } catch (err) {
     console.log("[SONG API ERROR]", err.message);
 
     res.status(500).json({
-      status: false,
+      success: false,
       creator: CREATOR,
       error: err.message
     });
