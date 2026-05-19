@@ -127,7 +127,7 @@ const PROVIDERS = {
     name: "rabbit1",
     fn: (url) => axios.get(`https://bunny-mp3-fast.vercel.app/api/mp3?url=${encodeURIComponent(url)}`)
       .then(r => r.data?.download_url || null)
-  }
+  },
 
     {
   name: "david",
