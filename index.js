@@ -89,26 +89,43 @@ app.get("/api/insta", async (req, res) => {
 app.get("/api/fb", async (req, res) => {
   try {
     const { url } = req.query;
-    if (!url) return res.status(400).json({ status: false, creator: CREATOR });
 
-    const baseUrl = `${req.protocol}://${req.get("host")}`;
+    if (!url) {
+      return res.status(400).json({
+        status: false,
+        creator: CREATOR,
+        message: "Facebook URL required"
+      });
+    }
 
     const { data } = await axios.get(
-      `https://nayan-video-downloader.vercel.app/alldown?url=${encodeURIComponent(url)}`
+      `https://api.nabees.online/api/fb?url=${encodeURIComponent(url)}`
     );
+
+    const downloads = data?.data?.downloads || [];
+
+    const hd = downloads.find(v => v.quality.includes("720"));
+    const sd = downloads.find(v => v.quality.includes("360"));
+    const mp3 = downloads.find(v => v.type === "audio");
 
     res.json({
       status: true,
       creator: CREATOR,
       baseUrl,
-      title: data.data.title,
-      thumbnail: data.data.thumbnail,
-  sd: data.data.low,
-  hd: data.data.high
+        
+        hd: hd?.download_url || null,
+        sd: sd?.download_url || null,
+        mp3: mp3?.download_url || null
+      
     });
 
-  } catch {
-    res.json({ status: false, creator: CREATOR });
+  } catch (err) {
+    console.log(err);
+
+    res.status(500).json({
+      status: false,
+      creator: CREATOR
+    });
   }
 });
 
@@ -131,8 +148,7 @@ app.get("/api/fb3", async (req, res) => {
       status: true,
       creator: CREATOR,
       baseUrl,
-      title: data.title,
-      thumbnail: data.thumbnail,
+      mp3: data.mp3,
       sd: data.sd,
       hd: data.hd
     });
