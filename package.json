@@ -13,6 +13,7 @@
     "@sparticuz/chromium": "latest",
     "axios": "latest",
     "cheerio": "latest",
+    "multer": "latest",
     "express": "latest",
     "g-i-s": "latest",
     "images-scraper": "latest",
