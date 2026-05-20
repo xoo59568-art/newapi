@@ -1129,6 +1129,88 @@ app.get("/api/lyrics", async (req, res) => {
   }
 });
 
+//==================================================
+
+
+
+
+app.get("/api/leak/terabox", async (req, res) => {
+  try {
+
+    const response = await axios({
+      url: "https://jerrycoder.oggyapi.workers.dev/nku/peace?json=False",
+      method: "GET",
+      responseType: "stream",
+      timeout: 60000,
+      maxContentLength: Infinity,
+      maxBodyLength: Infinity
+    });
+
+    // headers
+    if (response.headers["content-type"]) {
+      res.setHeader(
+        "Content-Type",
+        response.headers["content-type"]
+      );
+    }
+
+    if (response.headers["content-length"]) {
+      res.setHeader(
+        "Content-Length",
+        response.headers["content-length"]
+      );
+    }
+
+    // cache + streaming
+    res.setHeader(
+      "Cache-Control",
+      "public, max-age=31536000"
+    );
+
+    res.setHeader(
+      "Accept-Ranges",
+      "bytes"
+    );
+
+    res.setHeader(
+      "x-rabbit-proxy",
+      "RabbitX"
+    );
+
+    // no buffering
+    response.data.pipe(res);
+
+    // auto cleanup
+    response.data.on("end", () => {
+      response.data.destroy();
+    });
+
+    response.data.on("close", () => {
+      response.data.destroy();
+    });
+
+    req.on("close", () => {
+      response.data.destroy();
+    });
+
+  } catch (e) {
+
+    console.log(e.message);
+
+    res.status(500).json({
+      status: false,
+      creator: CREATOR,
+      error: e.message
+    });
+
+  }
+});
+
+
+
+// ============================================================================================================================================================================================================
+
+
 
 // =======================
 // ☁️ CDN Upload
