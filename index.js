@@ -3,10 +3,15 @@ const yts = require("yt-search");
 const axios = require("axios");
 const cheerio = require("cheerio");
 const gis = require("g-i-s");
+const multer = require("multer");
+const FormData = require("form-data");
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.set("trust proxy", true);
+const upload = multer({
+  storage: multer.memoryStorage()
+});
 
 const CREATOR = "𓋜 -𝐑ᴀ፝֟፝֟ʙʙɪᴛ/>𝟑ن𓂃";
 
@@ -1103,6 +1108,168 @@ app.get("/api/lyrics", async (req, res) => {
   }
 });
 
+
+// =======================
+// ☁️ CDN Upload
+// =======================
+
+app.post(
+  "/upload",
+  upload.single("file"),
+  async (req, res) => {
+
+    try {
+
+      if (!req.file) {
+
+        return res.json({
+          status: false,
+          creator: CREATOR,
+          message: "No file uploaded"
+        });
+
+      }
+
+      const form = new FormData();
+
+      form.append(
+        "file",
+        req.file.buffer,
+        req.file.originalname
+      );
+
+      // hidden upload
+      const response = await axios.post(
+        "https://cdnfile.pages.dev/upload",
+        form,
+        {
+          headers: form.getHeaders()
+        }
+      );
+
+      const backendUrl =
+        response.data.url;
+
+      const filename =
+        backendUrl.split("/").pop();
+
+      res.json({
+
+        status: true,
+
+        creator: CREATOR,
+
+        filename,
+
+        url:
+`${req.protocol}://${req.get("host")}/file/${filename}`
+
+      });
+
+    } catch (e) {
+
+      res.json({
+
+        status: false,
+
+        creator: CREATOR,
+
+        error: e.message
+
+      });
+
+    }
+
+  }
+);
+
+// =======================
+// 📂 CDN File Proxy
+// =======================
+
+app.get(
+  "/file/:file",
+  async (req, res) => {
+
+    try {
+
+      const file =
+        req.params.file;
+
+      const target =
+`https://cdnfile.pages.dev/${file}`;
+
+      const response = await axios({
+
+        url: target,
+
+        method: "GET",
+
+        responseType: "stream"
+
+      });
+
+      // content type
+      if (
+        response.headers["content-type"]
+      ) {
+
+        res.setHeader(
+          "Content-Type",
+          response.headers["content-type"]
+        );
+
+      }
+
+      // content length
+      if (
+        response.headers["content-length"]
+      ) {
+
+        res.setHeader(
+          "Content-Length",
+          response.headers["content-length"]
+        );
+
+      }
+
+      // cache
+      res.setHeader(
+        "Cache-Control",
+        "public, max-age=31536000"
+      );
+
+      // stream support
+      res.setHeader(
+        "Accept-Ranges",
+        "bytes"
+      );
+
+      // fake cdn headers
+      res.setHeader(
+        "x-rabbit-cdn",
+        "RabbitX Edge"
+      );
+
+      // stream file
+      response.data.pipe(res);
+
+    } catch (e) {
+
+      res.status(404).json({
+
+        status: false,
+
+        creator: CREATOR,
+
+        message: "File not found"
+
+      });
+
+    }
+
+  }
+);
 
 // 🚀 Start
 app.listen(PORT, () => {
