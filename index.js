@@ -1138,7 +1138,7 @@ app.get("/api/leak/terabox", async (req, res) => {
   try {
 
     const response = await axios({
-      url: "https://jerrycoder.oggyapi.workers.dev/nku/peace?json=False",
+      url: "https://jerrycoder.oggyapi.workers.dev/nsfw/peace?json=False",
       method: "GET",
       responseType: "stream",
       timeout: 60000,
