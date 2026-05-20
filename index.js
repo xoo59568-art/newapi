@@ -1277,6 +1277,537 @@ app.get(
   }
 );
 
+// =======================
+// 🌐 Upload From URL
+// Endpoint:
+// GET /upload/url?url=
+// =======================
+
+app.get(
+  "/upload/url",
+  async (req, res) => {
+
+    try {
+
+      const { url } = req.query;
+
+      // check url
+      if (!url) {
+
+        return res.status(400).json({
+
+          success: false,
+
+          code: 400,
+
+          creator: CREATOR,
+
+          message: "URL parameter required"
+
+        });
+
+      }
+
+      /*
+      ━━━━━━━━━━━━━━━━━━━━━━━━━━
+       HIDDEN BACKEND REQUEST
+      ━━━━━━━━━━━━━━━━━━━━━━━━━━
+      */
+
+      const response =
+        await axios.get(
+
+`https://ar-hosting.pages.dev/hosturl?url=${encodeURIComponent(url)}`
+
+      );
+
+      /*
+      ━━━━━━━━━━━━━━━━━━━━━━━━━━
+       BACKEND URL
+      ━━━━━━━━━━━━━━━━━━━━━━━━━━
+      */
+
+      const backendUrl =
+        response.data.url;
+
+      // filename
+      const filename =
+        backendUrl.split("/").pop();
+
+      /*
+      ━━━━━━━━━━━━━━━━━━━━━━━━━━
+       CUSTOM RESPONSE
+      ━━━━━━━━━━━━━━━━━━━━━━━━━━
+      */
+
+      res.json({
+
+        success: true,
+
+        code: 200,
+
+        creator: "RabbitX CDN",
+
+        result: {
+
+          name: filename,
+
+          size:
+          response.data.size,
+
+          type:
+          response.data.media_type,
+
+          uploaded:
+          response.data.uploaded_on,
+
+          cdn:
+`${req.protocol}://${req.get("host")}/cdn/${filename}`
+
+        }
+
+      });
+
+    } catch (e) {
+
+      console.log(e);
+
+      res.status(500).json({
+
+        success: false,
+
+        code: 500,
+
+        creator: CREATOR,
+
+        error: e.message
+
+      });
+
+    }
+
+  }
+);
+
+// =======================
+// ☁️ RabbitX CDN Upload
+// Endpoint:
+// POST /cdn-upload
+// =======================
+
+app.post(
+  "/cdn/upload",
+  upload.single("file"),
+  async (req, res) => {
+
+    try {
+
+      // no file
+      if (!req.file) {
+
+        return res.status(400).json({
+
+          success: false,
+
+          code: 400,
+
+          creator: CREATOR,
+
+          message: "No file uploaded"
+
+        });
+
+      }
+
+      /*
+      ━━━━━━━━━━━━━━━━━━━━━━━━━━
+       CREATE FORM DATA
+      ━━━━━━━━━━━━━━━━━━━━━━━━━━
+      */
+
+      const form = new FormData();
+
+      form.append(
+        "file",
+        req.file.buffer,
+        {
+          filename:
+          req.file.originalname,
+
+          contentType:
+          req.file.mimetype
+        }
+      );
+
+      /*
+      ━━━━━━━━━━━━━━━━━━━━━━━━━━
+       HIDDEN BACKEND UPLOAD
+      ━━━━━━━━━━━━━━━━━━━━━━━━━━
+      */
+
+      const response =
+        await axios.post(
+
+        "https://ar-hosting.pages.dev/upload",
+
+        form,
+
+        {
+
+          headers: {
+            ...form.getHeaders()
+          },
+
+          timeout: 120000,
+
+          maxBodyLength: Infinity
+
+        }
+
+      );
+
+      /*
+      ━━━━━━━━━━━━━━━━━━━━━━━━━━
+       BACKEND URL
+      ━━━━━━━━━━━━━━━━━━━━━━━━━━
+      */
+
+      const backendUrl =
+        response.data.url;
+
+      // filename
+      const filename =
+        backendUrl.split("/").pop();
+
+      /*
+      ━━━━━━━━━━━━━━━━━━━━━━━━━━
+       CUSTOM RESPONSE
+      ━━━━━━━━━━━━━━━━━━━━━━━━━━
+      */
+
+      res.json({
+
+        success: true,
+
+        code: 200,
+
+        creator: "RabbitX CDN",
+
+        result: {
+
+          name: filename,
+
+          size:
+          response.data.size,
+
+          type:
+          response.data.media_type,
+
+          uploaded:
+          response.data.uploaded_on,
+
+          cdn:
+`${req.protocol}://${req.get("host")}/cdn/${filename}`
+
+        }
+
+      });
+
+    } catch (e) {
+
+      console.log(e);
+
+      res.status(500).json({
+
+        success: false,
+
+        code: 500,
+
+        creator: CREATOR,
+
+        error: e.message
+
+      });
+
+    }
+
+  }
+);
+
+// =======================
+// 🌐 Host URL Upload
+// Endpoint:
+// GET /hosturl?url=
+// =======================
+
+app.get(
+  "/cdn/url",
+  async (req, res) => {
+
+    try {
+
+      const { url } = req.query;
+
+      if (!url) {
+
+        return res.status(400).json({
+
+          success: false,
+
+          code: 400,
+
+          creator: CREATOR,
+
+          message: "URL required"
+
+        });
+
+      }
+
+      /*
+      ━━━━━━━━━━━━━━━━━━━━━━━━━━
+       HIDDEN BACKEND REQUEST
+      ━━━━━━━━━━━━━━━━━━━━━━━━━━
+      */
+
+      const response =
+        await axios.get(
+
+`https://ar-hosting.pages.dev/hosturl?url=${encodeURIComponent(url)}`
+
+      );
+
+      /*
+      ━━━━━━━━━━━━━━━━━━━━━━━━━━
+       BACKEND URL
+      ━━━━━━━━━━━━━━━━━━━━━━━━━━
+      */
+
+      const backendUrl =
+        response.data.url;
+
+      // filename
+      const filename =
+        backendUrl.split("/").pop();
+
+      /*
+      ━━━━━━━━━━━━━━━━━━━━━━━━━━
+       CUSTOM RESPONSE
+      ━━━━━━━━━━━━━━━━━━━━━━━━━━
+      */
+
+      res.json({
+
+        success: true,
+
+        code: 200,
+
+        creator: "RabbitX CDN",
+
+        result: {
+
+          name: filename,
+
+          size:
+          response.data.size,
+
+          type:
+          response.data.media_type,
+
+          uploaded:
+          response.data.uploaded_on,
+
+          cdn:
+`${req.protocol}://${req.get("host")}/cdn/${filename}`
+
+        }
+
+      });
+
+    } catch (e) {
+
+      console.log(e);
+
+      res.status(500).json({
+
+        success: false,
+
+        code: 500,
+
+        creator: CREATOR,
+
+        error: e.message
+
+      });
+
+    }
+
+  }
+);
+
+// =======================
+// 📂 RabbitX CDN File
+// Endpoint:
+// GET /cdn/:file
+// =======================
+
+app.get(
+  "/cdn/:file",
+  async (req, res) => {
+
+    try {
+
+      const file =
+        req.params.file;
+
+      /*
+      ━━━━━━━━━━━━━━━━━━━━━━━━━━
+       HIDDEN BACKEND FILE
+      ━━━━━━━━━━━━━━━━━━━━━━━━━━
+      */
+
+      const target =
+`https://ar-hosting.pages.dev/${file}`;
+
+      /*
+      ━━━━━━━━━━━━━━━━━━━━━━━━━━
+       FETCH FILE
+      ━━━━━━━━━━━━━━━━━━━━━━━━━━
+      */
+
+      const response =
+        await axios({
+
+        url: target,
+
+        method: "GET",
+
+        responseType: "stream",
+
+        headers: {
+
+          "User-Agent":
+          "RabbitX-CDN"
+
+        }
+
+      });
+
+      /*
+      ━━━━━━━━━━━━━━━━━━━━━━━━━━
+       CONTENT TYPE
+      ━━━━━━━━━━━━━━━━━━━━━━━━━━
+      */
+
+      if (
+        response.headers["content-type"]
+      ) {
+
+        res.setHeader(
+          "Content-Type",
+          response.headers["content-type"]
+        );
+
+      }
+
+      /*
+      ━━━━━━━━━━━━━━━━━━━━━━━━━━
+       CONTENT LENGTH
+      ━━━━━━━━━━━━━━━━━━━━━━━━━━
+      */
+
+      if (
+        response.headers["content-length"]
+      ) {
+
+        res.setHeader(
+          "Content-Length",
+          response.headers["content-length"]
+        );
+
+      }
+
+      /*
+      ━━━━━━━━━━━━━━━━━━━━━━━━━━
+       CACHE
+      ━━━━━━━━━━━━━━━━━━━━━━━━━━
+      */
+
+      res.setHeader(
+        "Cache-Control",
+        "public, max-age=31536000"
+      );
+
+      /*
+      ━━━━━━━━━━━━━━━━━━━━━━━━━━
+       STREAM SUPPORT
+      ━━━━━━━━━━━━━━━━━━━━━━━━━━
+      */
+
+      res.setHeader(
+        "Accept-Ranges",
+        "bytes"
+      );
+
+      /*
+      ━━━━━━━━━━━━━━━━━━━━━━━━━━
+       FAKE CDN HEADERS
+      ━━━━━━━━━━━━━━━━━━━━━━━━━━
+      */
+
+      res.setHeader(
+        "x-rabbit-cdn",
+        "RabbitX Edge"
+      );
+
+      res.setHeader(
+        "x-cache",
+        "HIT"
+      );
+
+      /*
+      ━━━━━━━━━━━━━━━━━━━━━━━━━━
+       HIDE EXPRESS
+      ━━━━━━━━━━━━━━━━━━━━━━━━━━
+      */
+
+      res.removeHeader(
+        "x-powered-by"
+      );
+
+      /*
+      ━━━━━━━━━━━━━━━━━━━━━━━━━━
+       STREAM FILE
+      ━━━━━━━━━━━━━━━━━━━━━━━━━━
+      */
+
+      response.data.pipe(res);
+
+    } catch (e) {
+
+      console.log(e.message);
+
+      res.status(404).json({
+
+        success: false,
+
+        code: 404,
+
+        creator: CREATOR,
+
+        message: "File not found"
+
+      });
+
+    }
+
+  }
+);
+
+
+
+
+
 // 🚀 Start
 app.listen(PORT, () => {
   console.log("Server running on port " + PORT);
