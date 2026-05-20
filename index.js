@@ -19,10 +19,13 @@ const CREATOR = "𓋜 -𝐑ᴀ፝֟፝֟ʙʙɪᴛ/>𝟑ن𓂃";
 app.get("/", (req, res) => {
   res.sendFile(__dirname + "/index.html");
 });
-
 // ☁️ Upload Page
 app.get("/upload", (req, res) => {
   res.sendFile(__dirname + "/upload.html");
+});
+// ☁️ Upload Page
+app.get("/category/downloader", (req, res) => {
+  res.sendFile(__dirname + "/category/downloader.html");
 });
 
 // =======================
