@@ -20,7 +20,10 @@ app.get("/", (req, res) => {
   res.sendFile(__dirname + "/index.html");
 });
 
-
+// ☁️ Upload Page
+app.get("/upload", (req, res) => {
+  res.sendFile(__dirname + "/upload.html");
+});
 
 // =======================
 // 📸 Instagram
