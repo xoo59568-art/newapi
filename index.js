@@ -98,6 +98,8 @@ app.get("/api/fb", async (req, res) => {
       });
     }
 
+    const baseUrl = `${req.protocol}://${req.get("host")}`;
+
     const { data } = await axios.get(
       `https://api.nabees.online/api/fb?url=${encodeURIComponent(url)}`
     );
@@ -112,11 +114,9 @@ app.get("/api/fb", async (req, res) => {
       status: true,
       creator: CREATOR,
       baseUrl,
-        
-        hd: hd?.download_url || null,
-        sd: sd?.download_url || null,
-        mp3: mp3?.download_url || null
-      
+      hd: hd?.download_url || null,
+      sd: sd?.download_url || null,
+      mp3: mp3?.download_url || null
     });
 
   } catch (err) {
@@ -128,7 +128,6 @@ app.get("/api/fb", async (req, res) => {
     });
   }
 });
-
 
 
 //fb3
