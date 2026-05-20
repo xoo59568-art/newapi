@@ -1,0 +1,208 @@
+<!DOCTYPE html><html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RabbitX CDN Uploader</title>  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: Arial, sans-serif;
+    }
+
+    body {
+      background: #0f172a;
+      color: white;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 550px;
+      background: #111827;
+      border-radius: 20px;
+      padding: 25px;
+      box-shadow: 0 0 25px rgba(0,0,0,0.4);
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 25px;
+      font-size: 30px;
+    }
+
+    .upload-box {
+      border: 2px dashed #334155;
+      border-radius: 15px;
+      padding: 35px;
+      text-align: center;
+      background: #1e293b;
+    }
+
+    input[type="file"] {
+      margin-top: 15px;
+      color: white;
+    }
+
+    button {
+      width: 100%;
+      margin-top: 20px;
+      padding: 14px;
+      border: none;
+      border-radius: 12px;
+      background: #2563eb;
+      color: white;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #1d4ed8;
+    }
+
+    .status {
+      margin-top: 20px;
+      text-align: center;
+    }
+
+    .result {
+      margin-top: 20px;
+      background: #0f172a;
+      border-radius: 15px;
+      padding: 15px;
+      display: none;
+      word-break: break-all;
+    }
+
+    .preview img,
+    .preview video {
+      width: 100%;
+      margin-top: 15px;
+      border-radius: 12px;
+    }
+
+    .preview audio {
+      width: 100%;
+      margin-top: 15px;
+    }
+
+    a {
+      color: #60a5fa;
+      text-decoration: none;
+    }
+  </style></head>
+<body>  <div class="container"><h1>RabbitX CDN</h1>
+
+<div class="upload-box">
+  <p>Select File To Upload</p>
+  <input type="file" id="fileInput">
+</div>
+
+<button onclick="uploadFile()">
+  Upload File
+</button>
+
+<div class="status" id="status"></div>
+
+<div class="result" id="result"></div>
+
+  </div>  <script>
+
+    async function uploadFile() {
+
+      const fileInput = document.getElementById("fileInput");
+      const status = document.getElementById("status");
+      const result = document.getElementById("result");
+
+      const file = fileInput.files[0];
+
+      if (!file) {
+        status.innerHTML = "Please select a file";
+        return;
+      }
+
+      try {
+
+        status.innerHTML = "Uploading...";
+
+        const data = new FormData();
+
+        data.append("file", file);
+
+        const response = await fetch("/upload", {
+          method: "POST",
+          body: data
+        });
+
+        const json = await response.json();
+
+        if (!json.status) {
+          status.innerHTML = "Upload failed";
+          return;
+        }
+
+        status.innerHTML = "Upload successful";
+
+        let preview = "";
+
+        if (file.type.startsWith("image/")) {
+
+          preview = `
+            <img src="${json.url}">
+          `;
+
+        } else if (file.type.startsWith("video/")) {
+
+          preview = `
+            <video controls>
+              <source src="${json.url}">
+            </video>
+          `;
+
+        } else if (file.type.startsWith("audio/")) {
+
+          preview = `
+            <audio controls>
+              <source src="${json.url}">
+            </audio>
+          `;
+
+        }
+
+        result.style.display = "block";
+
+        result.innerHTML = `
+
+          <b>Filename:</b><br>
+          ${json.filename}
+
+          <br><br>
+
+          <b>CDN URL:</b><br>
+
+          <a href="${json.url}" target="_blank">
+            ${json.url}
+          </a>
+
+          <div class="preview">
+            ${preview}
+          </div>
+
+        `;
+
+      } catch (e) {
+
+        console.log(e);
+
+        status.innerHTML = "Upload error";
+
+      }
+
+    }
+
+  </script></body>
+</html>
