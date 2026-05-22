@@ -1128,8 +1128,100 @@ app.get("/api/lyrics", async (req, res) => {
 });
 
 //==================================================
+const GITHUB_MP4 =
+"https://raw.githubusercontent.com/USERNAME/REPO/main/videos.json";
+// =======================
+// 🎬 Random MP4 API
+// =======================
+
+app.get("/api/random/mp4", async (req, res) => {
+
+  try {
+
+    const json =
+      req.query.json === "true";
+
+    const { data } =
+      await axios.get(GITHUB_MP4);
+
+    if (
+      !Array.isArray(data) ||
+      data.length === 0
+    ) {
+
+      return res.status(404).json({
+
+        success: false,
+
+        creator: CREATOR,
+
+        message: "No video links found"
+
+      });
+
+    }
+
+    const random =
+      data[
+        Math.floor(
+          Math.random() * data.length
+        )
+      ];
+
+    // JSON response
+    if (json) {
+
+      return res.json({
+
+        success: true,
+
+        creator: CREATOR,
+
+        result: {
+          url: random
+        }
+
+      });
+
+    }
+
+    // Video proxy stream
+    const response =
+      await axios({
+
+        url: random,
+
+        method: "GET",
+
+        responseType: "stream"
+
+      });
+
+    res.setHeader(
+      "Content-Type",
+      "video/mp4"
+    );
+
+    response.data.pipe(res);
+
+  } catch (e) {
+
+    res.status(500).json({
+
+      success: false,
+
+      creator: CREATOR,
+
+      error: e.message
+
+    });
+
+  }
+
+});
 
 
+//==================================================
 
 
 app.get("/api/leak/terabox", async (req, res) => {
