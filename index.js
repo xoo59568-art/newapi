@@ -1238,7 +1238,7 @@ res.setHeader(
 // =======================
 
 app.post(
-  "/upload",
+  "/cdn/upload",
   upload.single("file"),
   async (req, res) => {
 
@@ -1286,6 +1286,8 @@ app.post(
         filename,
 
         url:
+`${req.protocol}://${req.get("host")}/file/${filename}`,
+        cdn:
 `${req.protocol}://${req.get("host")}/file/${filename}`
 
       });
@@ -1478,7 +1480,9 @@ app.get(
 
           uploaded:
           response.data.uploaded_on,
-
+url:
+`${req.protocol}://${req.get("host")}/cdn/${filename}`,
+  
           cdn:
 `${req.protocol}://${req.get("host")}/cdn/${filename}`
 
@@ -1514,7 +1518,7 @@ app.get(
 // =======================
 
 app.post(
-  "/cdn/upload",
+  "/upload",
   upload.single("file"),
   async (req, res) => {
 
@@ -1624,6 +1628,9 @@ app.post(
           uploaded:
           response.data.uploaded_on,
 
+          url:
+`${req.protocol}://${req.get("host")}/cdn/${filename}`,
+            
           cdn:
 `${req.protocol}://${req.get("host")}/cdn/${filename}`
 
