@@ -1201,7 +1201,10 @@ app.get("/api/leak/terabox", async (req, res) => {
       "Content-Type",
       "video/mp4"
     );
-
+res.setHeader(
+  "Cache-Control",
+  "public, max-age=300"
+);
     response.data.pipe(res);
 
   } catch (e) {
