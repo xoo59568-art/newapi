@@ -1129,7 +1129,7 @@ app.get("/api/lyrics", async (req, res) => {
 
 //==================================================
 const GITHUB_MP4 =
-"https://raw.githubusercontent.com/USERNAME/REPO/main/videos.json";
+"https://raw.githubusercontent.com/xoo59568-art/newapi/refs/heads/main/database/leakvideo.json";
 // =======================
 // 🎬 Random MP4 API
 // =======================
