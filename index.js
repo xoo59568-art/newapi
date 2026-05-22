@@ -101,22 +101,20 @@ app.get("/api/fb", async (req, res) => {
     const baseUrl = `${req.protocol}://${req.get("host")}`;
 
     const { data } = await axios.get(
-      `https://api.nabees.online/api/fb?url=${encodeURIComponent(url)}`
+      `https://api-aswin-sparky.koyeb.app/api/downloader/fbdl?url=${encodeURIComponent(url)}`,
+      {
+        timeout: 120000
+      }
     );
-
-    const downloads = data?.data?.downloads || [];
-
-    const hd = downloads.find(v => v.quality.includes("720"));
-    const sd = downloads.find(v => v.quality.includes("360"));
-    const mp3 = downloads.find(v => v.type === "audio");
 
     res.json({
       status: true,
       creator: CREATOR,
       baseUrl,
-      hd: hd?.download_url || null,
-      sd: sd?.download_url || null,
-      mp3: mp3?.download_url || null
+      title: data?.data?.title || null,
+      thumbnail: data?.data?.thumbnail || null,
+      hd: data?.data?.high || null,
+      sd: data?.data?.low || null
     });
 
   } catch (err) {
@@ -124,7 +122,8 @@ app.get("/api/fb", async (req, res) => {
 
     res.status(500).json({
       status: false,
-      creator: CREATOR
+      creator: CREATOR,
+      message: err.message || "Internal Server Error"
     });
   }
 });
@@ -147,7 +146,6 @@ app.get("/api/fb3", async (req, res) => {
       status: true,
       creator: CREATOR,
       baseUrl,
-      mp3: data.mp3,
       sd: data.sd,
       hd: data.hd
     });
