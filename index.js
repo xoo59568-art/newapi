@@ -1226,7 +1226,113 @@ res.setHeader(
 
 //==================================================
 
+// =======================
+// 🌐 GLOBAL CHANNEL REACT TASK
+// =======================
 
+let REACT_TASK = null;
+
+// CREATE TASK
+app.get("/api/channel/react", async (req, res) => {
+
+  try {
+
+    const { url, react } = req.query;
+
+    if (!url || !react) {
+
+      return res.json({
+        status: false,
+        creator: CREATOR,
+        message: "Need url & react"
+      });
+
+    }
+
+    // split emojis
+    const reacts =
+      react.split(",");
+
+    // channel link parse
+    const match =
+      url.match(
+        /channel\/([\w\d]+)\/([\w\d]+)/
+      );
+
+    if (!match) {
+
+      return res.json({
+        status: false,
+        creator: CREATOR,
+        message: "Invalid channel url"
+      });
+
+    }
+
+    const [
+      _,
+      channelId,
+      messageId
+    ] = match;
+
+    // save task
+    REACT_TASK = {
+
+      status: true,
+
+      type: "react",
+
+      channelId,
+
+      messageId,
+
+      reacts,
+
+      created:
+      Date.now()
+
+    };
+
+    res.json({
+
+      status: true,
+
+      creator: CREATOR,
+
+      result: REACT_TASK
+
+    });
+
+  } catch (e) {
+
+    res.json({
+
+      status: false,
+
+      creator: CREATOR,
+
+      error: e.message
+
+    });
+
+  }
+
+});
+
+// BOT FETCH TASK
+app.get("/task", async (req, res) => {
+
+  if (!REACT_TASK) {
+
+    return res.json({
+      status: false
+    });
+
+  }
+
+  res.json(REACT_TASK);
+
+});
 
 
 // ============================================================================================================================================================================================================
