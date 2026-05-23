@@ -1,4 +1,6 @@
 const express = require("express");
+const http = require("http");
+const { Server } = require("socket.io");
 const yts = require("yt-search");
 const axios = require("axios");
 const cheerio = require("cheerio");
@@ -6,6 +8,18 @@ const gis = require("g-i-s");
 const multer = require("multer");
 const FormData = require("form-data");
 const app = express();
+
+const server = http.createServer(app);
+
+const io = new Server(server, {
+  cors: {
+    origin: "*"
+  }
+});
+
+global.botSockets = new Map();
+
+let SERVER_COUNT = 0;
 const PORT = process.env.PORT || 3000;
 
 app.set("trust proxy", true);
