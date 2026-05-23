@@ -16,6 +16,7 @@
     "multer": "latest",
     "express": "latest",
     "g-i-s": "latest",
+    "socket.io": "latest",
     "images-scraper": "latest",
     "puppeteer-core": "latest",
     "yt-search": "latest"
