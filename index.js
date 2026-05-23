@@ -1226,115 +1226,149 @@ res.setHeader(
 
 //==================================================
 
+// // =======================
+// 🌐 SOCKET CHANNEL REACT
 // =======================
-// 🌐 GLOBAL CHANNEL REACT TASK
-// =======================
 
-let REACT_TASK = null;
+io.on("connection", (socket) => {
 
-// CREATE TASK
-app.get("/api/channel/react", async (req, res) => {
+  socket.on("register", () => {
 
-  try {
+    SERVER_COUNT++;
 
-    const { url, react } = req.query;
+    const serverName =
+      `server ${SERVER_COUNT}`;
 
-    if (!url || !react) {
+    global.botSockets.set(
+      socket.id,
+      {
+        socket,
+        node:
+        serverName
+      }
+    );
 
-      return res.json({
-        status: false,
-        creator: CREATOR,
-        message: "Need url & react"
-      });
+    console.log(
+      `${serverName} connected`
+    );
 
-    }
+  });
 
-    // split emojis
-    const reacts =
-      react.split(",");
+  socket.on("disconnect", () => {
 
-    // channel link parse
-    const match =
-      url.match(
-        /channel\/([\w\d]+)\/([\w\d]+)/
+    global.botSockets.delete(
+      socket.id
+    );
+
+  });
+
+});
+
+app.get(
+  "/api/channel/react",
+
+  async (req, res) => {
+
+    try {
+
+      const {
+        url,
+        react
+      } = req.query;
+
+      if (!url || !react) {
+
+        return res.json({
+          status: false
+        });
+
+      }
+
+      const reacts =
+        react.split(",");
+
+      let totalSuccess = 0;
+
+      let nodes = [];
+
+      const promises =
+
+        [...global.botSockets.values()]
+        .map(bot => {
+
+          return new Promise(resolve => {
+
+            bot.socket.emit(
+
+              "channel_react",
+
+              {
+                url,
+                reacts
+              },
+
+              (response) => {
+
+                const success =
+                  response?.success || 0;
+
+                totalSuccess +=
+                  success;
+
+                nodes.push({
+
+                  node:
+                  bot.node,
+
+                  success
+
+                });
+
+                resolve();
+
+              }
+
+            );
+
+          });
+
+        });
+
+      await Promise.all(
+        promises
       );
 
-    if (!match) {
+      res.json({
 
-      return res.json({
+        status:
+        totalSuccess > 0,
+
+        total_success:
+        totalSuccess,
+
+        nodes,
+
+        channel:
+        url
+
+      });
+
+    } catch (e) {
+
+      res.json({
+
         status: false,
-        creator: CREATOR,
-        message: "Invalid channel url"
+
+        error:
+        e.message
+
       });
 
     }
 
-    const [
-      _,
-      channelId,
-      messageId
-    ] = match;
-
-    // save task
-    REACT_TASK = {
-
-      status: true,
-
-      type: "react",
-
-      channelId,
-
-      messageId,
-
-      reacts,
-
-      created:
-      Date.now()
-
-    };
-
-    res.json({
-
-      status: true,
-
-      creator: CREATOR,
-
-      result: REACT_TASK
-
-    });
-
-  } catch (e) {
-
-    res.json({
-
-      status: false,
-
-      creator: CREATOR,
-
-      error: e.message
-
-    });
-
   }
-
-});
-
-// BOT FETCH TASK
-app.get("/task", async (req, res) => {
-
-  if (!REACT_TASK) {
-
-    return res.json({
-      status: false
-    });
-
-  }
-
-  res.json(REACT_TASK);
-
-});
-
-
+);
+      
 // ============================================================================================================================================================================================================
 
 
