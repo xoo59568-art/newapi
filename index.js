@@ -381,7 +381,88 @@ app.get("/api/play", async (req, res) => {
 });
 
 
+
+
+
+
+
+
+
+
+
+
+
+//---------++
+
+
+
 app.get("/api/song", async (req, res) => {
+  try {
+    const { url } = req.query;
+
+    if (!url) {
+      return res.status(400).json({
+        success: false,
+        creator: CREATOR,
+        message: "YouTube URL required"
+      });
+    }
+
+    // API Request
+    const api = `https://eliteprotech-apis.zone.id/ytdown?url=।${encodeURIComponent(url)}&format=mp3`;
+
+    const { data } = await axios.get(api, {
+      timeout: 30000,
+      headers: {
+        "User-Agent": "Mozilla/5.0"
+      }
+    });
+
+    // Check response
+    if (!data || !data.success || !data.download) {
+      return res.status(404).json({
+        success: false,
+        creator: CREATOR,
+        message: "Song not found"
+      });
+    }
+
+    // Normal clean response
+    res.json({
+      success: true,
+      creator: CREATOR,
+      result: {
+      
+      
+    
+        url: data.downloadURL,
+        mp3: data.downloadURL,
+        audio: data.downloadURL,
+        download: data.downloadURL
+      }
+    });
+
+  } catch (err) {
+    console.log("[SONG API ERROR]", err.message);
+
+    res.status(500).json({
+      success: false,
+      creator: CREATOR,
+      error: err.message
+    });
+  }
+});
+
+
+
+
+
+
+//song 
+
+
+
+app.get("/api/ytmp3", async (req, res) => {
   try {
     const { url } = req.query;
 
