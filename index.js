@@ -111,18 +111,18 @@ Sitemap: https://rabbitapi.zone.id/sitemap.xml
 app.get("/sitemap.xml", (req, res) => {
   res.type("application/xml");
 
-  res.send(`
-<?xml version="1.0" encoding="UTF-8"?>
+  res.send(`<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-
 <url>
 <loc>https://rabbitapi.zone.id/</loc>
 <priority>1.0</priority>
 </url>
-
-</urlset>
-`);
+</urlset>`);
 });
+
+
+
+
 app.get("/upload", (req, res) => {
   noCache(res);
   res.sendFile(__dirname + "/upload.html");
