@@ -9,8 +9,8 @@ const gis = require("g-i-s");
 const multer = require("multer");
 const FormData = require("form-data");
 const app = express();
-const server = http.createServer(app);
 app.disable("x-powered-by");
+const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
     origin: "*"
