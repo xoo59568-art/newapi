@@ -409,7 +409,7 @@ app.get("/api/song", async (req, res) => {
     }
 
     // API Request
-    const api = `https://eliteprotech-apis.zone.id/ytdown?url=${encodeURIComponent(url)}&format=mp3`;
+    const api = `https://eliteprotech-apis.zone.id/ytmp3?url=${encodeURIComponent(url)}`;
 
     const { data } = await axios.get(api, {
       timeout: 30000,
@@ -419,7 +419,7 @@ app.get("/api/song", async (req, res) => {
     });
 
     // Check response
-    if (!data || !data.success || !data.download) {
+    if (!data || !data.status || !data.result?.download) {
       return res.status(404).json({
         success: false,
         creator: CREATOR,
@@ -434,11 +434,11 @@ app.get("/api/song", async (req, res) => {
       result: {
       
       
-    
-        url: data.downloadURL,
-        mp3: data.downloadURL,
-        audio: data.downloadURL,
-        download: data.downloadURL
+       title: data.result.title,
+        url: data.result.download,
+        mp3: data.result.download,
+        audio: data.result.download,
+        download: data.result.download
       }
     });
 
