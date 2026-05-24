@@ -9,9 +9,8 @@ const gis = require("g-i-s");
 const multer = require("multer");
 const FormData = require("form-data");
 const app = express();
-
 const server = http.createServer(app);
-
+app.disable("x-powered-by");
 const io = new Server(server, {
   cors: {
     origin: "*"
@@ -37,8 +36,6 @@ const ssAgent = new https.Agent({
 
 // Auto cleanup
 setInterval(() => {
-
-  ssAgent.destroy();
 
   console.clear();
 
