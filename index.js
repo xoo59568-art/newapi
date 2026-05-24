@@ -1,0 +1,1016 @@
+const express = require("express");
+const http = require("http");
+const { Server } = require("socket.io");
+const yts = require("yt-search");
+const axios = require("axios");
+const cheerio = require("cheerio");
+const https = require("https");
+const gis = require("g-i-s");
+const multer = require("multer");
+const FormData = require("form-data");
+
+const app = express();
+app.disable("x-powered-by");
+
+const server = http.createServer(app);
+const io = new Server(server, {
+  cors: { origin: "*" },
+  pingTimeout: 20000,
+  pingInterval: 15000
+});
+
+global.botSockets = new Map();
+let SERVER_COUNT = 0;
+const PORT = process.env.PORT || 3000;
+
+app.set("trust proxy", true);
+
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 50 * 1024 * 1024 }
+});
+
+const CREATOR = "𓋜 -𝐑ᴀ፝֟፝֟ʙʙɪᴛ/>𝟑ن𓂃";
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━
+// HTTPS AGENT — no keepAlive
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━
+const ssAgent = new https.Agent({
+  keepAlive: false,
+  maxSockets: 10,
+  maxFreeSockets: 0,
+  timeout: 30000
+});
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━
+// AXIOS DEFAULT CONFIG
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━
+const ax = axios.create({
+  timeout: 30000,
+  headers: { "User-Agent": "Mozilla/5.0" },
+  maxRedirects: 5,
+  decompress: true
+});
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━
+// NO-CACHE HELPER
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━
+function noCache(res) {
+  res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
+  res.setHeader("Pragma", "no-cache");
+  res.setHeader("Expires", "0");
+  res.setHeader("Surrogate-Control", "no-store");
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━
+// STREAM DESTROY HELPER
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━
+function safeDestroy(stream) {
+  try {
+    if (stream && !stream.destroyed) stream.destroy();
+  } catch (_) {}
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━
+// AUTO MEMORY CLEANUP — 30s
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━
+setInterval(() => {
+  // Dead socket cleanup
+  for (const [id, bot] of global.botSockets.entries()) {
+    if (!bot.socket.connected) {
+      global.botSockets.delete(id);
+    }
+  }
+
+  // Force GC if exposed
+  if (global.gc) {
+    try { global.gc(); } catch (_) {}
+  }
+
+  console.clear();
+}, 30000);
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// PAGES
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+app.get("/", (req, res) => {
+  noCache(res);
+  res.sendFile(__dirname + "/index.html");
+});
+
+app.get("/upload", (req, res) => {
+  noCache(res);
+  res.sendFile(__dirname + "/upload.html");
+});
+
+app.get("/category/downloader", (req, res) => {
+  noCache(res);
+  res.sendFile(__dirname + "/category/downloader.html");
+});
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// 📸 INSTAGRAM
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+app.get("/api/instagram", async (req, res) => {
+  noCache(res);
+  try {
+    const { url } = req.query;
+    if (!url) return res.status(400).json({ status: false, creator: CREATOR });
+
+    const { data } = await ax.get(
+      `https://api-faa.my.id/faa/igdl?url=${encodeURIComponent(url)}`
+    );
+
+    res.json({ status: true, creator: CREATOR, url: data.result });
+  } catch {
+    res.json({ status: false, creator: CREATOR });
+  }
+});
+
+app.get("/api/insta", async (req, res) => {
+  noCache(res);
+  try {
+    const { url } = req.query;
+    if (!url) return res.status(400).json({ status: false, creator: CREATOR });
+
+    const { data } = await ax.get(
+      `https://api-aswin-sparky.koyeb.app/api/downloader/igdl?url=${encodeURIComponent(url)}`
+    );
+
+    res.json({
+      status: true,
+      creator: CREATOR,
+      thumbnail: data.data[0].thumbnail,
+      url: data.data[0].url
+    });
+  } catch {
+    res.json({ status: false, creator: CREATOR });
+  }
+});
+
+app.get("/api/insta2", async (req, res) => {
+  noCache(res);
+  try {
+    const { url } = req.query;
+    if (!url) return res.json({ status: false, creator: CREATOR });
+
+    const { data } = await ax.get(
+      `https://api-aswin-sparky.koyeb.app/api/downloader/igdl?url=${encodeURIComponent(url)}`
+    );
+
+    res.json({
+      status: true,
+      creator: CREATOR,
+      quality: data.quality,
+      ext: data.ext,
+      thumbnail: data.data[0].thumbnail,
+      url: data.data[0].url
+    });
+  } catch (e) {
+    res.json({ status: false, creator: CREATOR, error: e.message });
+  }
+});
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// 📘 FACEBOOK
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+app.get("/api/fb", async (req, res) => {
+  noCache(res);
+  try {
+    const { url } = req.query;
+    if (!url) return res.status(400).json({ status: false, creator: CREATOR, message: "Facebook URL required" });
+
+    const { data } = await ax.get(
+      `https://api-aswin-sparky.koyeb.app/api/downloader/fbdl?url=${encodeURIComponent(url)}`,
+      { timeout: 120000 }
+    );
+
+    res.json({
+      status: true,
+      creator: CREATOR,
+      title: data?.data?.title || null,
+      thumbnail: data?.data?.thumbnail || null,
+      hd: data?.data?.high || null,
+      sd: data?.data?.low || null
+    });
+  } catch (err) {
+    res.status(500).json({ status: false, creator: CREATOR, message: err.message });
+  }
+});
+
+app.get("/api/fb2", async (req, res) => {
+  noCache(res);
+  try {
+    const { url } = req.query;
+    if (!url) return res.status(400).json({ status: false, creator: CREATOR });
+
+    const { data } = await ax.get(
+      `https://apiskeith.top/download/fbdown?url=${encodeURIComponent(url)}`
+    );
+
+    res.json({ status: true, creator: CREATOR, result: data.result });
+  } catch {
+    res.json({ status: false, creator: CREATOR });
+  }
+});
+
+app.get("/api/fb3", async (req, res) => {
+  noCache(res);
+  try {
+    const { url } = req.query;
+    if (!url) return res.status(400).json({ status: false, creator: CREATOR });
+
+    const { data } = await ax.get(
+      `https://rabbitapi.nett.to/api/fb?url=${encodeURIComponent(url)}`
+    );
+
+    res.json({ status: true, creator: CREATOR, sd: data.sd, hd: data.hd });
+  } catch {
+    res.json({ status: false, creator: CREATOR });
+  }
+});
+
+app.get("/api/facebook", async (req, res) => {
+  noCache(res);
+  try {
+    const { url } = req.query;
+    if (!url) return res.status(400).json({ status: false, creator: CREATOR });
+
+    const { data } = await ax.get(
+      `https://apis.davidcyril.name.ng/facebook2?url=${encodeURIComponent(url)}`
+    );
+
+    res.json({ status: true, creator: CREATOR, result: data.video });
+  } catch {
+    res.json({ status: false, creator: CREATOR });
+  }
+});
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// ▶️ PLAY API
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+app.get("/api/play", async (req, res) => {
+  noCache(res);
+  try {
+    const { q, url } = req.query;
+    const input = q || url;
+
+    if (!input) return res.status(400).json({
+      status: false, creator: CREATOR, message: "Enter song name or YouTube URL"
+    });
+
+    let video;
+
+    if (input.includes("youtube.com") || input.includes("youtu.be")) {
+      video = { title: "YouTube Audio", url: input, videoId: null, duration: null, views: null, uploaded: null, thumbnail: null, author: { name: null } };
+    } else {
+      const searchRes = await ax.get(
+        `https://rabbitapi.nett.to/search/youtube?q=${encodeURIComponent(input)}&limit=1`
+      );
+      video = searchRes.data.result[0];
+    }
+
+    if (!video) return res.json({ status: false, creator: CREATOR, message: "No result found" });
+
+    const audioRes = await ax.get(
+      `https://rabbitapi.nett.to/api/song?url=${encodeURIComponent(video.url)}`
+    );
+
+    const audioUrl =
+      audioRes?.data?.payload?.result?.audio ||
+      audioRes?.data?.result?.audio ||
+      audioRes?.data?.result ||
+      null;
+
+    if (!audioUrl) return res.json({ status: false, creator: CREATOR, message: "Audio fetch failed" });
+
+    res.json({
+      status: true,
+      creator: CREATOR,
+      query: input,
+      result: {
+        title: video.title,
+        videoId: video.videoId,
+        duration: video.duration,
+        views: video.views,
+        uploaded: video.uploaded,
+        thumbnail: video.thumbnail,
+        url: audioUrl,
+        author: { name: video.author?.name }
+      }
+    });
+  } catch (e) {
+    res.status(500).json({ status: false, creator: CREATOR, error: e.message });
+  }
+});
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// 🎵 SONG / YTMP3
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+app.get("/api/song", async (req, res) => {
+  noCache(res);
+  try {
+    const { url } = req.query;
+    if (!url) return res.status(400).json({ success: false, creator: CREATOR, message: "YouTube URL required" });
+
+    const { data } = await ax.get(
+      `https://eliteprotech-apis.zone.id/ytmp3?url=${encodeURIComponent(url)}`
+    );
+
+    if (!data?.status || !data?.result?.download) return res.status(404).json({
+      success: false, creator: CREATOR, message: "Song not found"
+    });
+
+    res.json({
+      success: true,
+      creator: CREATOR,
+      result: {
+        title: data.result.title,
+        url: data.result.download,
+        mp3: data.result.download,
+        audio: data.result.download,
+        download: data.result.download
+      }
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, creator: CREATOR, error: err.message });
+  }
+});
+
+app.get("/api/ytmp3", async (req, res) => {
+  noCache(res);
+  try {
+    const { url } = req.query;
+    if (!url) return res.status(400).json({ success: false, creator: CREATOR, message: "YouTube URL required" });
+
+    const { data } = await ax.get(
+      `https://ytmp333-chama-woad.vercel.app/api/ytdl?url=${encodeURIComponent(url)}&format=mp3&_chm=ofc`
+    );
+
+    if (!data?.success || !data?.download) return res.status(404).json({
+      success: false, creator: CREATOR, message: "Song not found"
+    });
+
+    res.json({
+      success: true,
+      creator: CREATOR,
+      result: {
+        title: data.title,
+        format: data.format,
+        quality: data.quality,
+        url: data.download,
+        mp3: data.download,
+        audio: data.download,
+        download: data.download
+      }
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, creator: CREATOR, error: err.message });
+  }
+});
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// 🎥 YOUTUBE DOWNLOADER
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+app.get("/api/ytmp4", async (req, res) => {
+  noCache(res);
+  try {
+    const { url } = req.query;
+    if (!url) return res.status(400).json({ status: false, creator: CREATOR, message: "YouTube URL is required" });
+
+    const { data } = await ax.get(
+      `https://bunny-allsocal-downv2.vercel.app/api/download?url=${encodeURIComponent(url)}`
+    );
+
+    const mp4_360  = data.videos.find(v => v.quality.includes("360p")  && v.extension === "mp4") || null;
+    const mp4_720  = data.videos.find(v => v.quality.includes("720p")  && v.extension === "mp4") || null;
+    const mp4_1080 = data.videos.find(v => v.quality.includes("1080p") && v.extension === "mp4") || null;
+    const audio    = data.audios.find(a => a.quality.includes("131kb")) || null;
+
+    const fmt = v => v ? { quality: v.quality, type: v.extension, url: v.url } : null;
+
+    res.json({
+      status: true,
+      creator: CREATOR,
+      metadata: {
+        title: data.title,
+        thumbnail: data.thumbnail,
+        duration: data.duration
+      },
+      download: {
+        video: {
+          "360p": fmt(mp4_360),
+          "720p": fmt(mp4_720),
+          "1080p": fmt(mp4_1080)
+        },
+        audio: fmt(audio)
+      }
+    });
+  } catch (err) {
+    res.status(500).json({ status: false, creator: CREATOR, message: "Internal Server Error" });
+  }
+});
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// ▶️ YOUTUBE SEARCH
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+app.get("/search/youtube", async (req, res) => {
+  noCache(res);
+  try {
+    const { query, q, limit } = req.query;
+    const searchQuery = query || q;
+    const searchLimit = parseInt(limit) || 10;
+
+    if (!searchQuery) return res.status(400).json({
+      status: false, creator: CREATOR, message: "Enter query",
+      example: "/search/youtube?q=alan walker&limit=5"
+    });
+
+    const search = await yts(searchQuery);
+
+    const videos = search.videos.slice(0, searchLimit).map((v, i) => ({
+      id: i + 1,
+      title: v.title,
+      url: v.url,
+      videoId: v.videoId,
+      duration: v.timestamp,
+      views: v.views,
+      uploaded: v.ago,
+      thumbnail: v.thumbnail,
+      author: { name: v.author.name, url: v.author.url }
+    }));
+
+    res.json({
+      status: true,
+      creator: CREATOR,
+      query: searchQuery,
+      total: videos.length,
+      limit: searchLimit,
+      result: videos
+    });
+  } catch (e) {
+    res.status(500).json({ status: false, creator: CREATOR, error: e.message });
+  }
+});
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// 🖼️ IMAGE SEARCH (single route)
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+async function googleScrape(query, limit = 10) {
+  const { data } = await ax.get(
+    `https://www.google.com/search?tbm=isch&q=${encodeURIComponent(query)}`,
+    { timeout: 5000 }
+  );
+  const $ = cheerio.load(data);
+  const results = [];
+  $("img").each((_, el) => {
+    const img = $(el).attr("src");
+    if (img && img.startsWith("http") && !results.includes(img)) results.push(img);
+  });
+  return results.slice(0, limit);
+}
+
+function gisSearch(query, limit = 10) {
+  return new Promise((resolve, reject) => {
+    gis(query, (err, results) => {
+      if (err) return reject(err);
+      resolve(results.map(v => v.url).filter(v => v && v.startsWith("http")).slice(0, limit));
+    });
+  });
+}
+
+app.get("/api/image", async (req, res) => {
+  noCache(res);
+  try {
+    const { q, query, limit } = req.query;
+    const searchQ = q || query;
+    if (!searchQ) return res.status(400).json({ status: false, creator: CREATOR, message: "Query required" });
+
+    let result = [];
+    let source = "google-scrape";
+
+    try {
+      result = await googleScrape(searchQ, Number(limit) || 10);
+      if (!result.length) throw new Error("No results");
+    } catch {
+      source = "gis-fallback";
+      result = await gisSearch(searchQ, Number(limit) || 10);
+    }
+
+    res.json({
+      status: true,
+      creator: CREATOR,
+      query: searchQ,
+      source,
+      total: result.length,
+      result
+    });
+  } catch (e) {
+    res.status(500).json({ status: false, creator: CREATOR, error: e.message });
+  }
+});
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// 🎵 SPOTIFY
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+app.get("/search/spotify", async (req, res) => {
+  noCache(res);
+  try {
+    const { q, limit } = req.query;
+    if (!q) return res.status(400).json({ status: false, creator: CREATOR, message: "Query is required" });
+
+    const { data } = await ax.get(
+      `https://jerrycoder.oggyapi.workers.dev/search/spotify?q=${encodeURIComponent(q)}&limit=${limit || 15}`
+    );
+
+    res.json({
+      status: true,
+      creator: CREATOR,
+      query: q,
+      total: data.tracks?.length || 0,
+      result: data.tracks || []
+    });
+  } catch (err) {
+    res.status(500).json({ status: false, creator: CREATOR, message: "Internal Server Error" });
+  }
+});
+
+app.get("/api/spotify", async (req, res) => {
+  noCache(res);
+  try {
+    const { url } = req.query;
+    if (!url) return res.status(400).json({ status: false, creator: CREATOR, message: "Spotify URL is required" });
+
+    const { data } = await ax.get(
+      `https://jerrycoder.oggyapi.workers.dev/down/spotify?url=${encodeURIComponent(url)}`
+    );
+
+    res.json({
+      status: true,
+      creator: CREATOR,
+      title: data.title,
+      artist: data.artist,
+      duration: data.duration,
+      thumbnail: data.thumbnail,
+      url: data.download_link
+    });
+  } catch (err) {
+    res.status(500).json({ status: false, creator: CREATOR, message: "Internal Server Error" });
+  }
+});
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// 📌 PINTEREST (single /api/pint route)
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+app.get("/search/pinterest", async (req, res) => {
+  noCache(res);
+  try {
+    const { q, type, limit } = req.query;
+    if (!q) return res.status(400).json({ status: false, creator: CREATOR, message: "Query is required" });
+
+    const { data } = await ax.get(
+      `https://jerrycoder.oggyapi.workers.dev/search/pin?q=${encodeURIComponent(q)}&type=${type || "both"}&limit=${limit || 10}`
+    );
+
+    res.json({
+      status: true,
+      creator: CREATOR,
+      query: q,
+      type: data.type,
+      total: data.total,
+      result: data.result
+    });
+  } catch (err) {
+    res.status(500).json({ status: false, creator: CREATOR });
+  }
+});
+
+app.get("/api/pinterest", async (req, res) => {
+  noCache(res);
+  try {
+    const { url } = req.query;
+    if (!url) return res.status(400).json({ status: false, creator: CREATOR, message: "Pinterest URL is required" });
+
+    const { data } = await ax.get(
+      `https://jerrycoder.oggyapi.workers.dev/down/pinterest?url=${encodeURIComponent(url)}`
+    );
+
+    res.json({
+      status: true,
+      creator: CREATOR,
+      title: data.title,
+      author: data.author,
+      thumbnail: data.thumbnail,
+      url: data.url
+    });
+  } catch (err) {
+    res.status(500).json({ status: false, creator: CREATOR, message: "Internal Server Error" });
+  }
+});
+
+app.get("/api/pint", async (req, res) => {
+  noCache(res);
+  try {
+    const { url } = req.query;
+    if (!url) return res.json({ status: false, creator: CREATOR });
+
+    const { data } = await ax.get(
+      `https://apis.davidcyril.name.ng/download/pinterest?url=${encodeURIComponent(url)}`
+    );
+
+    if (!data.success) return res.json({ status: false, creator: CREATOR, error: "Failed to fetch Pinterest media" });
+
+    const medias = data.data.medias || [];
+    const video = medias.find(v => v.extension === "mp4") || medias[0];
+
+    res.json({
+      status: true,
+      creator: CREATOR,
+      title: data.data.title,
+      thumbnail: data.data.thumbnail,
+      quality: video.quality,
+      ext: video.extension,
+      size: video.formattedSize,
+      url: video.url
+    });
+  } catch (e) {
+    res.json({ status: false, creator: CREATOR, error: e.message });
+  }
+});
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// 🌐 WEB SCREENSHOT
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+app.get("/tool/webss", async (req, res) => {
+  noCache(res);
+  let stream;
+  try {
+    let { url, m } = req.query;
+    if (!url) return res.status(400).json({ status: false, creator: CREATOR, message: "URL parameter required" });
+
+    if (!/^https?:\/\//i.test(url)) url = "https://" + url;
+    m = (m || "desktop").toLowerCase();
+
+    const encodedUrl = encodeURIComponent(url);
+    const api = m === "mobile"
+      ? `https://jerrycoder.oggyapi.workers.dev/tool/ss?url=${encodedUrl}`
+      : `https://jerrycoder.oggyapi.workers.dev/tool/fullss?url=${encodedUrl}`;
+
+    const response = await axios({
+      method: "GET",
+      url: api,
+      responseType: "stream",
+      timeout: 30000,
+      httpsAgent: ssAgent,
+      headers: { "User-Agent": "Mozilla/5.0" }
+    });
+
+    stream = response.data;
+
+    res.setHeader("Content-Type", response.headers["content-type"] || "image/png");
+    res.setHeader("Content-Disposition", "inline");
+    noCache(res);
+
+    stream.on("end",   () => safeDestroy(stream));
+    stream.on("close", () => safeDestroy(stream));
+    stream.on("error", () => safeDestroy(stream));
+
+    req.on("close", () => safeDestroy(stream));
+    res.on("finish", () => safeDestroy(stream));
+
+    stream.pipe(res);
+  } catch (e) {
+    safeDestroy(stream);
+    res.status(500).json({ status: false, creator: CREATOR, error: e.message });
+  }
+});
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// 🎤 LYRICS
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+app.get("/api/lyrics", async (req, res) => {
+  noCache(res);
+  try {
+    const { song } = req.query;
+    if (!song) return res.status(400).json({ status: false, creator: CREATOR });
+
+    const { data } = await ax.get(
+      `https://apis.davidcyril.name.ng/lyrics3?song=${encodeURIComponent(song)}`
+    );
+
+    res.json({ status: true, creator: CREATOR, result: data.result });
+  } catch {
+    res.json({ status: false, creator: CREATOR });
+  }
+});
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// 🎬 RANDOM LEAK VIDEO
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+const GITHUB_MP4 = "https://raw.githubusercontent.com/xoo59568-art/newapi/refs/heads/main/database/leakvideo.json";
+
+app.get("/api/leak/terabox", async (req, res) => {
+  noCache(res);
+  let stream;
+  try {
+    const json = req.query.json === "true";
+
+    const { data } = await ax.get(GITHUB_MP4);
+
+    if (!Array.isArray(data) || data.length === 0) return res.status(404).json({
+      success: false, creator: CREATOR, message: "No video links found"
+    });
+
+    const random = data[Math.floor(Math.random() * data.length)];
+
+    if (json) return res.json({ success: true, creator: CREATOR, result: { url: random } });
+
+    const response = await axios({ url: random, method: "GET", responseType: "stream", timeout: 60000 });
+
+    stream = response.data;
+
+    res.setHeader("Content-Type", "video/mp4");
+    noCache(res);
+
+    stream.on("end",   () => safeDestroy(stream));
+    stream.on("close", () => safeDestroy(stream));
+    stream.on("error", () => safeDestroy(stream));
+
+    req.on("close",   () => safeDestroy(stream));
+    res.on("finish",  () => safeDestroy(stream));
+
+    stream.pipe(res);
+  } catch (e) {
+    safeDestroy(stream);
+    res.status(500).json({ success: false, creator: CREATOR, error: e.message });
+  }
+});
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// ☁️ CDN UPLOAD (file)
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+app.post("/cdn/upload", upload.single("file"), async (req, res) => {
+  noCache(res);
+  try {
+    if (!req.file) return res.json({ status: false, creator: CREATOR, message: "No file uploaded" });
+
+    const form = new FormData();
+    form.append("file", req.file.buffer, req.file.originalname);
+
+    const response = await ax.post("https://cdnfile.pages.dev/upload", form, {
+      headers: form.getHeaders(),
+      maxBodyLength: Infinity
+    });
+
+    const filename = response.data.url.split("/").pop();
+    const base = `${req.protocol}://${req.get("host")}`;
+
+    res.json({
+      status: true,
+      creator: CREATOR,
+      filename,
+      url: `${base}/file/${filename}`,
+      cdn: `${base}/file/${filename}`
+    });
+  } catch (e) {
+    res.json({ status: false, creator: CREATOR, error: e.message });
+  } finally {
+    // free buffer from memory immediately
+    if (req.file) req.file.buffer = null;
+  }
+});
+
+app.post("/upload", upload.single("file"), async (req, res) => {
+  noCache(res);
+  try {
+    if (!req.file) return res.status(400).json({ success: false, code: 400, creator: CREATOR, message: "No file uploaded" });
+
+    const form = new FormData();
+    form.append("file", req.file.buffer, { filename: req.file.originalname, contentType: req.file.mimetype });
+
+    const response = await ax.post("https://ar-hosting.pages.dev/upload", form, {
+      headers: { ...form.getHeaders() },
+      timeout: 120000,
+      maxBodyLength: Infinity
+    });
+
+    const filename = response.data.url.split("/").pop();
+    const base = `${req.protocol}://${req.get("host")}`;
+
+    res.json({
+      success: true,
+      code: 200,
+      creator: "RabbitX CDN",
+      result: {
+        name: filename,
+        size: response.data.size,
+        type: response.data.media_type,
+        uploaded: response.data.uploaded_on,
+        url: `${base}/cdn/${filename}`,
+        cdn: `${base}/cdn/${filename}`
+      }
+    });
+  } catch (e) {
+    res.status(500).json({ success: false, code: 500, creator: CREATOR, error: e.message });
+  } finally {
+    if (req.file) req.file.buffer = null;
+  }
+});
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// 🌐 UPLOAD FROM URL
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+app.get("/upload/url", async (req, res) => {
+  noCache(res);
+  try {
+    const { url } = req.query;
+    if (!url) return res.status(400).json({ success: false, code: 400, creator: CREATOR, message: "URL parameter required" });
+
+    const response = await ax.get(`https://ar-hosting.pages.dev/hosturl?url=${encodeURIComponent(url)}`);
+    const filename = response.data.url.split("/").pop();
+    const base = `${req.protocol}://${req.get("host")}`;
+
+    res.json({
+      success: true,
+      code: 200,
+      creator: "RabbitX CDN",
+      result: {
+        name: filename,
+        size: response.data.size,
+        type: response.data.media_type,
+        uploaded: response.data.uploaded_on,
+        url: `${base}/cdn/${filename}`,
+        cdn: `${base}/cdn/${filename}`
+      }
+    });
+  } catch (e) {
+    res.status(500).json({ success: false, code: 500, creator: CREATOR, error: e.message });
+  }
+});
+
+app.get("/cdn/url", async (req, res) => {
+  noCache(res);
+  try {
+    const { url } = req.query;
+    if (!url) return res.status(400).json({ success: false, code: 400, creator: CREATOR, message: "URL required" });
+
+    const response = await ax.get(`https://ar-hosting.pages.dev/hosturl?url=${encodeURIComponent(url)}`);
+    const filename = response.data.url.split("/").pop();
+    const base = `${req.protocol}://${req.get("host")}`;
+
+    res.json({
+      success: true,
+      code: 200,
+      creator: "RabbitX CDN",
+      result: {
+        name: filename,
+        size: response.data.size,
+        type: response.data.media_type,
+        uploaded: response.data.uploaded_on,
+        cdn: `${base}/cdn/${filename}`
+      }
+    });
+  } catch (e) {
+    res.status(500).json({ success: false, code: 500, creator: CREATOR, error: e.message });
+  }
+});
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// 📂 CDN FILE PROXY (/file/:file)
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+app.get("/file/:file", async (req, res) => {
+  noCache(res);
+  let stream;
+  try {
+    const target = `https://cdnfile.pages.dev/${req.params.file}`;
+    const response = await axios({ url: target, method: "GET", responseType: "stream", timeout: 30000 });
+
+    stream = response.data;
+
+    if (response.headers["content-type"])   res.setHeader("Content-Type",   response.headers["content-type"]);
+    if (response.headers["content-length"]) res.setHeader("Content-Length", response.headers["content-length"]);
+
+    res.setHeader("Accept-Ranges",  "bytes");
+    res.setHeader("x-rabbit-cdn",   "RabbitX Edge");
+    noCache(res);
+
+    stream.on("end",   () => safeDestroy(stream));
+    stream.on("close", () => safeDestroy(stream));
+    stream.on("error", () => safeDestroy(stream));
+    req.on("close",    () => safeDestroy(stream));
+    res.on("finish",   () => safeDestroy(stream));
+
+    stream.pipe(res);
+  } catch (e) {
+    safeDestroy(stream);
+    res.status(404).json({ status: false, creator: CREATOR, message: "File not found" });
+  }
+});
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// 📂 CDN FILE PROXY (/cdn/:file)
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+app.get("/cdn/:file", async (req, res) => {
+  noCache(res);
+  let stream;
+  try {
+    const target = `https://ar-hosting.pages.dev/${req.params.file}`;
+    const response = await axios({ url: target, method: "GET", responseType: "stream", timeout: 30000, headers: { "User-Agent": "RabbitX-CDN" } });
+
+    stream = response.data;
+
+    if (response.headers["content-type"])   res.setHeader("Content-Type",   response.headers["content-type"]);
+    if (response.headers["content-length"]) res.setHeader("Content-Length", response.headers["content-length"]);
+
+    res.setHeader("Accept-Ranges", "bytes");
+    res.setHeader("x-rabbit-cdn",  "RabbitX Edge");
+    res.setHeader("x-cache",       "HIT");
+    res.removeHeader("x-powered-by");
+    noCache(res);
+
+    stream.on("end",   () => safeDestroy(stream));
+    stream.on("close", () => safeDestroy(stream));
+    stream.on("error", () => safeDestroy(stream));
+    req.on("close",    () => safeDestroy(stream));
+    res.on("finish",   () => safeDestroy(stream));
+
+    stream.pipe(res);
+  } catch (e) {
+    safeDestroy(stream);
+    res.status(404).json({ success: false, code: 404, creator: CREATOR, message: "File not found" });
+  }
+});
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// 🔌 SOCKET — CHANNEL REACT
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+io.on("connection", (socket) => {
+
+  socket.on("register", () => {
+    SERVER_COUNT++;
+    const serverName = `server ${SERVER_COUNT}`;
+    global.botSockets.set(socket.id, { socket, node: serverName });
+    console.log(`${serverName} connected`);
+  });
+
+  socket.on("disconnect", () => {
+    global.botSockets.delete(socket.id);
+    console.log(`socket ${socket.id} disconnected — cleaned`);
+  });
+
+});
+
+app.get("/api/channel/react", async (req, res) => {
+  noCache(res);
+  try {
+    const { url, react } = req.query;
+    if (!url || !react) return res.json({ status: false });
+
+    const reacts = react.split(",");
+    let totalSuccess = 0;
+    const nodes = [];
+
+    const promises = [...global.botSockets.values()].map(bot => {
+      return new Promise(resolve => {
+        bot.socket.emit("channel_react", { url, reacts }, (response) => {
+          const success = response?.success || 0;
+          totalSuccess += success;
+          nodes.push({ node: bot.node, success });
+          resolve();
+        });
+      });
+    });
+
+    await Promise.all(promises);
+
+    res.json({ status: totalSuccess > 0, total_success: totalSuccess, nodes, channel: url });
+  } catch (e) {
+    res.json({ status: false, error: e.message });
+  }
+});
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// 🚀 START
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+server.listen(PORT, () => {
+  console.log("Server running on port " + PORT);
+});
