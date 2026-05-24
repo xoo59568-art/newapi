@@ -4,6 +4,7 @@ const { Server } = require("socket.io");
 const yts = require("yt-search");
 const axios = require("axios");
 const cheerio = require("cheerio");
+const https = require("https");
 const gis = require("g-i-s");
 const multer = require("multer");
 const FormData = require("form-data");
@@ -29,6 +30,19 @@ const upload = multer({
 
 const CREATOR = "𓋜 -𝐑ᴀ፝֟፝֟ʙʙɪᴛ/>𝟑ن𓂃";
 
+const ssAgent = new https.Agent({
+  keepAlive: false,
+  maxSockets: 50
+});
+
+// Auto cleanup
+setInterval(() => {
+
+  ssAgent.destroy();
+
+  console.clear();
+
+}, 30000);
 // ✅ Home
 app.get("/", (req, res) => {
   res.sendFile(__dirname + "/index.html");
@@ -1193,6 +1207,137 @@ app.get("/search/youtube", async (req, res) => {
   }
 
 });
+
+
+// =======================
+// 🌐 Web Screenshot API
+// =======================
+
+app.get("/tool/webss", async (req, res) => {
+
+  let stream;
+
+  try {
+
+    let { url, m } = req.query;
+
+    // URL check
+    if (!url) {
+
+      return res.status(400).json({
+        status: false,
+        creator: CREATOR,
+        message: "URL parameter required"
+      });
+
+    }
+
+    // Auto HTTPS
+    if (!/^https?:\/\//i.test(url)) {
+      url = "https://" + url;
+    }
+
+    // Mode
+    m = (m || "desktop").toLowerCase();
+
+    // Encode URL
+    const encodedUrl =
+      encodeURIComponent(url);
+
+    // Backend select
+    const api =
+      m === "mobile"
+
+        ? `https://jerrycoder.oggyapi.workers.dev/tool/ss?url=${encodedUrl}`
+
+        : `https://jerrycoder.oggyapi.workers.dev/tool/fullss?url=${encodedUrl}`;
+
+    // Stream request
+    const response =
+      await axios({
+
+        method: "GET",
+
+        url: api,
+
+        responseType: "stream",
+
+        timeout: 30000,
+
+        httpsAgent: ssAgent,
+
+        headers: {
+          "User-Agent": "Mozilla/5.0"
+        }
+
+      });
+
+    stream = response.data;
+
+    // Headers
+    res.setHeader(
+      "Content-Type",
+      response.headers["content-type"] || "image/png"
+    );
+
+    res.setHeader(
+      "Cache-Control",
+      "no-store, no-cache, must-revalidate"
+    );
+
+    res.setHeader(
+      "Pragma",
+      "no-cache"
+    );
+
+    res.setHeader(
+      "Expires",
+      "0"
+    );
+
+    res.setHeader(
+      "Content-Disposition",
+      "inline"
+    );
+
+    // Cleanup
+    stream.on("end", () => {
+      stream.destroy();
+    });
+
+    stream.on("close", () => {
+      stream.destroy();
+    });
+
+    req.on("close", () => {
+
+      if (stream) {
+        stream.destroy();
+      }
+
+    });
+
+    // Pipe image
+    stream.pipe(res);
+
+  } catch (e) {
+
+    res.status(500).json({
+
+      status: false,
+
+      creator: CREATOR,
+
+      error: e.message
+
+    });
+
+  }
+
+});
+
+
+
 
 
 
