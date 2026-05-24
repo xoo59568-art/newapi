@@ -409,7 +409,7 @@ app.get("/api/song", async (req, res) => {
     }
 
     // API Request
-    const api = `https://eliteprotech-apis.zone.id/ytdown?url=।${encodeURIComponent(url)}&format=mp3`;
+    const api = `https://eliteprotech-apis.zone.id/ytdown?url=${encodeURIComponent(url)}&format=mp3`;
 
     const { data } = await axios.get(api, {
       timeout: 30000,
