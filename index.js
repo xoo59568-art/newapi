@@ -146,6 +146,91 @@ app.get("/api.html", (req, res) => {
   res.sendFile(__dirname + "/api.html");
 });
 
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// 📸 PAIR
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+
+app.get("/api/pair", async (req, res) => {
+
+  noCache(res);
+
+  try {
+
+    const { number } = req.query;
+
+    if (!number) {
+      return res.status(400).json({
+        success: false,
+        creator: CREATOR,
+        message: "Number required"
+      });
+    }
+
+    // hidden backend request
+    const api =
+      `http://66.78.41.20:3000/pair/${number}`;
+
+    const response = await axios.get(api, {
+
+      // 3 MINUTE TIMEOUT
+      timeout: 180000,
+
+      headers: {
+        "User-Agent": "Mozilla/5.0"
+      }
+
+    });
+
+    const data = response.data;
+
+    if (!data?.code) {
+      return res.status(404).json({
+        success: false,
+        creator: CREATOR,
+        message: "Pair code not found"
+      });
+    }
+
+    return res.json({
+      success: true,
+      creator: CREATOR,
+
+      result: {
+        number: data.phone || number,
+        code: data.code
+      }
+    });
+
+  } catch (err) {
+
+    if (err.code === "ECONNABORTED") {
+
+      return res.status(408).json({
+        success: false,
+        creator: CREATOR,
+        message: "Request timeout after 3 minutes"
+      });
+
+    }
+
+    return res.status(500).json({
+      success: false,
+      creator: CREATOR,
+      error: err.message
+    });
+
+  }
+
+});
+
+
+
+
+
+
+
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // 📸 ALL DOWNLOAD 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
