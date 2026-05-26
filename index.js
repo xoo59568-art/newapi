@@ -395,8 +395,9 @@ error: err.message
 
 app.get("/audio/:id", async (req, res) => {
 try {
+
 const target =
-'https://api.sayan-nexuswork.workers.dev/stream?v=${req.params.id}';
+  `https://api.sayan-nexuswork.workers.dev/stream?v=${req.params.id}`;
 
 return res.redirect(target);
 
