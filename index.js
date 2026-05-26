@@ -133,6 +133,92 @@ app.get("/category/downloader", (req, res) => {
   res.sendFile(__dirname + "/category/downloader.html");
 });
 
+
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// 📸 ALL DOWNLOAD 
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+
+
+
+
+app.get("/api/dwnall", async (req, res) => {
+  noCache(res);
+
+  try {
+    const { url } = req.query;
+
+    if (!url) {
+      return res.status(400).json({
+        success: false,
+        creator: CREATOR,
+        message: "URL required"
+      });
+    }
+
+    const api = `https://nayan-video-downloader.vercel.app/alldown?url=${encodeURIComponent(url)}`;
+
+    const response = await ax.get(api, {
+      timeout: 15000,
+      headers: {
+        "User-Agent": "Mozilla/5.0"
+      }
+    });
+
+    const data = response.data;
+
+    if (!data?.status || !data?.data) {
+      return res.status(404).json({
+        success: false,
+        creator: CREATOR,
+        message: "Media not found"
+      });
+    }
+
+    const result = data.data;
+
+    return res.json({
+      success: true,
+      creator: CREATOR,
+
+      result: {
+        title: result.title || "Unknown",
+        thumbnail: result.thumbnail || null,
+
+        ss: result.low || null,
+        hd: result.high || null
+      }
+    });
+
+  } catch (err) {
+
+    if (err.code === "ECONNABORTED") {
+      return res.status(408).json({
+        success: false,
+        creator: CREATOR,
+        message: "Request timeout"
+      });
+    }
+
+    return res.status(500).json({
+      success: false,
+      creator: CREATOR,
+      error: err.message
+    });
+  }
+});
+
+
+
+
+
+
+
+
+
+
+
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // 📸 INSTAGRAM
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
