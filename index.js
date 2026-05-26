@@ -343,28 +343,43 @@ app.get("/api/song", async (req, res) => {
     if (!url) return res.status(400).json({ success: false, creator: CREATOR, message: "YouTube URL required" });
 
     const { data } = await ax.get(
-      `https://eliteprotech-apis.zone.id/ytmp3?url=${encodeURIComponent(url)}`
+      `https://api.sayan-nexuswork.workers.dev/play?query=${encodeURIComponent(url)}`
     );
 
-    if (!data?.status || !data?.result?.download) return res.status(404).json({
-      success: false, creator: CREATOR, message: "Song not found"
-    });
+  if (!data?.status || !data?.url) {
+return res.status(404).json({
+success: false,
+creator: CREATOR,
+message: "Song not found"
+});
+    }
+    
 
     res.json({
       success: true,
       creator: CREATOR,
       result: {
-        title: data.result.title,
-        url: data.result.download,
-        mp3: data.result.download,
-        audio: data.result.download,
-        download: data.result.download
+        title: data.title,
+        format: "MP3",
+        
+        url: data.url,
+        mp3: data.url,
+        audio: data.url,
+        download: data.url
       }
     });
   } catch (err) {
     res.status(500).json({ success: false, creator: CREATOR, error: err.message });
   }
 });
+
+
+
+
+
+
+
+
 
 app.get("/api/ytmp3", async (req, res) => {
   noCache(res);
@@ -376,21 +391,26 @@ app.get("/api/ytmp3", async (req, res) => {
       `https://ytmp333-chama-woad.vercel.app/api/ytdl?url=${encodeURIComponent(url)}&format=mp3&_chm=ofc`
     );
 
-    if (!data?.success || !data?.download) return res.status(404).json({
-      success: false, creator: CREATOR, message: "Song not found"
-    });
+    if (!data?.status || !data?.url) {
+return res.status(404).json({
+success: false,
+creator: CREATOR,
+message: "Song not found"
+});
+    }
+    
 
     res.json({
       success: true,
       creator: CREATOR,
       result: {
         title: data.title,
-        format: data.format,
-        quality: data.quality,
-        url: data.download,
-        mp3: data.download,
-        audio: data.download,
-        download: data.download
+        format: MP3,
+        
+        url: data.url,
+        mp3: data.url,
+        audio: data.url,
+        download: data.url
       }
     });
   } catch (err) {
