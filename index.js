@@ -141,7 +141,9 @@ app.get("/category/downloader", (req, res) => {
 });
 
 
-
+app.get('/api.html', (req, res) => {
+    res.sendFile(path.join(__dirname, 'api.html'));
+});
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // 📸 ALL DOWNLOAD 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
