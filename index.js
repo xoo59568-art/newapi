@@ -98,6 +98,13 @@ app.get("/", (req, res) => {
   noCache(res);
   res.sendFile(__dirname + "/index.html");
 });
+app.get("/ads.txt", (req, res) => {
+  res.type("text/plain");
+  res.send(
+    "google.com, pub-1090659711705372, DIRECT, f08c47fec0942fa0"
+  );
+});
+
 app.get("/robots.txt", (req, res) => {
   res.type("text/plain");
   res.send(`
