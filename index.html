@@ -3,7 +3,71 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    
+    <!-- Title -->
     <title>Rabbit API Dashboard</title>
+
+    <!-- Standard SEO Meta Tags -->
+    <meta name="description" content="Premium Enterprise Level Rest API Interface developed by Mrrabbit. High-speed media downloaders and search operational stacks cluster active.">
+    <meta name="keywords" content="Rabbit API, Mrrabbit, WhatsApp Bot API, Video Downloader API, Spotify API, Pinterest API">
+    <meta name="author" content="Mrrabbit">
+    <meta name="theme-color" content="#a855f7">
+
+    <!-- Open Graph & Twitter Meta Tags without hardcoded links -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Rabbit API Dashboard">
+    <meta property="og:description" content="Premium Enterprise Level Rest API Interface developed by Mrrabbit. All system clusters active.">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Rabbit API Dashboard">
+    <meta name="twitter:description" content="Premium Enterprise Level Rest API Interface developed by Mrrabbit. All system clusters active.">
+
+    <!-- 🚀 Ultra-Dynamic Host Detector Core Script -->
+    <script>
+      (function() {
+        // যেখানে হোস্টিং করা হবে, সেটার রুট ডোমেন অটোমেটিক বের করবে
+        const autoDetectedOrigin = window.location.origin;
+        const fallbackImageRelativePath = "/cdn/1779799270605.jpg";
+        const finalDynamicImageUrl = autoDetectedOrigin + fallbackImageRelativePath;
+        const currentAbsolutePageUrl = window.location.href;
+
+        // ১. ব্রাউজার ট্যাব ফেভিকন ও ডিপি সেটআপ (Favicon UI Integration)
+        const iconConfigs = [
+          { rel: "icon", type: "image/jpeg" },
+          { rel: "shortcut icon", type: "image/jpeg" },
+          { rel: "apple-touch-icon" }
+        ];
+        
+        iconConfigs.forEach(conf => {
+          let linkElement = document.createElement('link');
+          linkElement.rel = conf.rel;
+          if (conf.type) linkElement.type = conf.type;
+          linkElement.href = finalDynamicImageUrl;
+          document.head.appendChild(linkElement);
+        });
+
+        // ২. সোশাল প্রিভিউ মেটা ট্যাগ ডাইনামিক বাইন্ডিং (Meta Tags Injector)
+        const metaConfigs = [
+          { name: "property", key: "og:url", content: currentAbsolutePageUrl },
+          { name: "property", key: "og:image", content: finalDynamicImageUrl },
+          { name: "name", key: "twitter:image", content: finalDynamicImageUrl }
+        ];
+
+        metaConfigs.forEach(metaConf => {
+          let metaElement = document.createElement('meta');
+          metaElement.setAttribute(metaConf.name, metaConf.key);
+          metaElement.setAttribute('content', metaConf.content);
+          document.head.appendChild(metaElement);
+        });
+
+        // ৩. ডাইনামিক ইমেজ এলিমেন্ট হ্যান্ডলার (DOM রেডি হলে ইমেজের সোর্স পুশ করবে)
+        window.addEventListener("DOMContentLoaded", function() {
+          document.querySelectorAll(".auto-host-dp").forEach(img => {
+            img.src = finalDynamicImageUrl;
+          });
+        });
+      })();
+    </script>
+
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
       @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
@@ -78,12 +142,14 @@
         transform: translateY(-1px);
       }
 
-      .logo-icon {
-        font-size: 2rem;
-        background: linear-gradient(135deg, #c084fc 0%, var(--cyan) 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        filter: drop-shadow(0 0 8px var(--primary-glow));
+      .logo-dp {
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 1.5px solid var(--primary);
+        box-shadow: 0 0 10px var(--primary-glow);
+        background: #111827;
       }
 
       .logo-text {
@@ -539,7 +605,7 @@
         opacity: 1;
       }
 
-      /* Premium Footer Blueprint Setup */
+      /* Premium Footer Setup */
       .premium-footer {
         text-align: center;
         padding: 3rem 1.5rem;
@@ -562,12 +628,15 @@
         width: 24px;
         height: 24px;
         border-radius: 50%;
-        background: linear-gradient(135deg, var(--primary) 0%, var(--cyan) 100%);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 0.75rem;
-        color: white;
+        overflow: hidden;
+        border: 1px solid var(--primary);
+        background: #111827;
+      }
+
+      .avatar-ring img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
       }
 
       .dev-name { font-size: 0.85rem; font-weight: 600; color: #9ca3af; }
@@ -606,10 +675,11 @@
 
     <header class="header">
       <div class="logo-wrapper">
-        <i class="fas fa-rabbit logo-icon"></i>
+        <!-- Image source handling perfectly via dynamic script engine -->
+        <img alt="Rabbit Logo" class="logo-dp auto-host-dp">
         <h1 class="logo-text">RABBIT API</h1>
       </div>
-      <p class="tagline"><span class="status-pulse"></span> Rest API Interface For Users</p>
+      <p class="tagline"><span class="status-pulse"></span> FREE Rest API  For DEVELOPERS</p>
 
       <div class="search-container">
         <div class="search-wrapper">
@@ -1071,7 +1141,9 @@
 
     <footer class="premium-footer">
       <div class="dev-badge-pnl">
-        <div class="avatar-ring"><i class="fas fa-rabbit"></i></div>
+        <div class="avatar-ring">
+          <img alt="Mrrabbit Avatar" class="auto-host-dp">
+        </div>
         <div class="dev-name">Rabbit API Infrastructure</div>
       </div>
       <div class="footer-cr">© 2026 Rabbit API Core. All system clusters active.</div>
@@ -1088,7 +1160,7 @@
 
     <script>
       // =======================================================
-      // ১. গ্লোবাল ইউআরএল বিল্ডার ইঞ্জিন
+      // ১. গ্লোবাল ইউআরএল বিল্ডার ইঞ্জিন (ডাইনামিক হোস্ট ট্র্যাকার)
       // =======================================================
       function getEndpointUrl(customPath, index) {
         const cardNode = document.getElementById(`api_${index}`);
@@ -1101,7 +1173,6 @@
           if (value) queryParams[key] = value;
         });
 
-        // Pinterest রেডিও বাটন ডাটা ট্র্যাকিং
         const activeRadio = cardNode.querySelector(`input[name="pin_type_${index}"]:checked`);
         if(activeRadio) {
           queryParams['type'] = activeRadio.value;
@@ -1125,7 +1196,6 @@
         }
       }
 
-      // DOM লোড হওয়ার পর সবগুলো ইনপুটে ইনিশিয়াল সিঙ্ক করার ড্রাইভার লুপ
       window.addEventListener('DOMContentLoaded', () => {
         const totalCards = document.querySelectorAll('.cards-grid .custom-card');
         document.getElementById('liveServiceCounter').textContent = totalCards.length;
@@ -1162,7 +1232,7 @@
       }
 
       // =======================================================
-      // ৫. কাস্টম নোটিফিকেশনシステム HUD
+      // ৫. কাস্টম নোটিফিকেশন সিস্টেম HUD
       // =======================================================
       function pushNotification(msg) {
         const toast = document.getElementById('toast');
@@ -1172,7 +1242,7 @@
       }
 
       // =======================================================
-      // ৬. ক্লিপরবোর্ড কপি ড্রাইভার অপারেশনস
+      // ৬. ক্লিপবোর্ড কপি ড্রাইভার অপারেশনস
       // =======================================================
       function copyRequestLiveUrl(customPath, index) {
         navigator.clipboard.writeText(getEndpointUrl(customPath, index)).then(() => {
@@ -1186,6 +1256,10 @@
           pushNotification('System cURL string copied!');
         });
       }
+
+      document.querySelectorAll('.tool-btn:not(.url-copy-btn)').forEach((btn, index) => {
+         btn.setAttribute('onclick', `copyStdout(${index})`);
+      });
 
       function copyStdout(index) {
         const outputLogs = document.getElementById(`out_${index}`).textContent;
