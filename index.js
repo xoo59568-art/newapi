@@ -405,7 +405,7 @@ message: "Song not found"
       creator: CREATOR,
       result: {
         title: data.title,
-        format: MP3,
+        
         
         url: data.url,
         mp3: data.url,
