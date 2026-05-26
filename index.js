@@ -141,9 +141,11 @@ app.get("/category/downloader", (req, res) => {
 });
 
 
-app.get('/api.html', (req, res) => {
-    res.sendFile(path.join(__dirname, 'api.html'));
+app.get("/api.html", (req, res) => {
+  noCache(res);
+  res.sendFile(__dirname + "/api.html");
 });
+
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // 📸 ALL DOWNLOAD 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
