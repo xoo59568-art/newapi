@@ -336,7 +336,90 @@ app.get("/api/play", async (req, res) => {
 // 🎵 SONG / YTMP3
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
+
 app.get("/api/song", async (req, res) => {
+noCache(res);
+
+try {
+const { url } = req.query;
+
+if (!url) {
+  return res.status(400).json({
+    success: false,
+    creator: CREATOR,
+    message: "YouTube URL required"
+  });
+}
+
+const { data } = await ax.get(
+  `https://api.sayan-nexuswork.workers.dev/play?query=${encodeURIComponent(url)}`
+);
+
+if (!data?.status || !data?.url) {
+  return res.status(404).json({
+    success: false,
+    creator: CREATOR,
+    message: "Song not found"
+  });
+}
+
+const videoId =
+  new URL(data.url).searchParams.get("v");
+
+const proxyUrl =
+  `${req.protocol}://${req.get("host")}/audio/${videoId}`;
+
+res.json({
+  success: true,
+  creator: CREATOR,
+
+  result: {
+    title: data.title,
+    format: "MP3",
+
+    url: proxyUrl,
+    mp3: proxyUrl,
+    audio: proxyUrl,
+    download: proxyUrl
+  }
+});
+
+} catch (err) {
+res.status(500).json({
+success: false,
+creator: CREATOR,
+error: err.message
+});
+}
+});
+
+app.get("/audio/:id", async (req, res) => {
+try {
+const target =
+"https://api.sayan-nexuswork.workers.dev/stream?v=${req.params.id}";
+
+return res.redirect(target);
+
+} catch (err) {
+res.status(500).json({
+success: false,
+error: err.message
+});
+}
+});
+
+
+
+
+
+
+
+
+
+
+
+
+app.get("/api/gan", async (req, res) => {
   noCache(res);
   try {
     const { url } = req.query;
