@@ -147,6 +147,110 @@ app.get("/api.html", (req, res) => {
 });
 
 
+
+
+
+//channel react
+app.get("/api/chr", async (req, res) => {
+
+  noCache(res);
+
+  try {
+
+    const { apikey, url, react } = req.query;
+
+    // API KEY REQUIRED
+    if (!apikey) {
+      return res.status(401).json({
+        success: false,
+        creator: CREATOR,
+        message: "API key required"
+      });
+    }
+
+    // LOAD KEYS FROM GITHUB
+    const { data } = await axios.get(
+      "https://raw.githubusercontent.com/xoo59568-art/newapi/refs/heads/main/database/apikeys.txt",
+      {
+        timeout: 10000,
+        headers: {
+          "User-Agent": "Mozilla/5.0"
+        }
+      }
+    );
+
+    const keys = data
+      .split("\n")
+      .map(v => v.trim())
+      .filter(Boolean);
+
+    // CHECK API KEY
+    if (!keys.includes(apikey)) {
+      return res.status(403).json({
+        success: false,
+        creator: CREATOR,
+        message: "Invalid API key"
+      });
+    }
+
+    // PARAM CHECK
+    if (!url) {
+      return res.status(400).json({
+        success: false,
+        creator: CREATOR,
+        message: "Channel URL required"
+      });
+    }
+
+    if (!react) {
+      return res.status(400).json({
+        success: false,
+        creator: CREATOR,
+        message: "Reaction required"
+      });
+    }
+
+    // BACKEND REQUEST
+    const api =
+      `http://66.78.41.20:3000/api/chr?url=${encodeURIComponent(url)}&react=${encodeURIComponent(react)}`;
+
+    const response = await axios.get(api, {
+      timeout: 180000,
+      headers: {
+        "User-Agent": "Mozilla/5.0"
+      }
+    });
+
+    return res.json({
+      success: true,
+      creator: CREATOR,
+      result: response.data
+    });
+
+  } catch (err) {
+
+    if (err.code === "ECONNABORTED") {
+      return res.status(408).json({
+        success: false,
+        creator: CREATOR,
+        message: "Request timeout after 3 minutes"
+      });
+    }
+
+    return res.status(500).json({
+      success: false,
+      creator: CREATOR,
+      error: err.message
+    });
+
+  }
+
+});
+
+
+
+
+
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // 📸 PAIR
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
