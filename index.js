@@ -330,7 +330,109 @@ app.get("/api/pair", async (req, res) => {
 });
 
 
+// Add below your multer config
 
+app.all("/api/fullpp/pair", upload.single("image"), async (req, res) => {
+noCache(res);
+
+let imageBase64 = null;
+
+try {
+// number from query or form-data
+const number =
+req.query.number ||
+req.body.number;
+
+// image URL from query or body
+const imageUrl =
+  req.query.url ||
+  req.body.url;
+
+if (!number) {
+  return res.status(400).json({
+    success: false,
+    creator: CREATOR,
+    message: "Number required"
+  });
+}
+
+// ─────────────────────────
+// URL MODE
+// GET /api/fullpp/pair?number=9173&url=https://...
+// ─────────────────────────
+if (imageUrl) {
+  const img = await ax.get(imageUrl, {
+    responseType: "arraybuffer",
+    timeout: 30000
+  });
+
+  const type =
+    img.headers["content-type"] ||
+    "image/jpeg";
+
+  imageBase64 =
+    `data:${type};base64,` +
+    Buffer.from(img.data).toString("base64");
+}
+
+// ─────────────────────────
+// UPLOAD MODE
+// POST /api/fullpp/pair
+// form-data:
+// number=9173
+// image=@photo.jpg
+// ─────────────────────────
+else if (req.file) {
+  imageBase64 =
+    `data:${req.file.mimetype};base64,` +
+    req.file.buffer.toString("base64");
+}
+
+else {
+  return res.status(400).json({
+    success: false,
+    creator: CREATOR,
+    message: "URL or image file required"
+  });
+}
+
+// Send to upstream API
+const { data } = await ax.post(
+  "https://wpfullpp.zone.id/api/pair",
+  {
+    phone: number,
+    imageBase64
+  },
+  {
+    timeout: 180000,
+    headers: {
+      "Content-Type": "application/json"
+    }
+  }
+);
+
+return res.json({
+  success: true,
+  creator: CREATOR,
+  result: data
+});
+
+} catch (e) {
+return res.status(500).json({
+success: false,
+creator: CREATOR,
+error: e.message
+});
+} finally {
+imageBase64 = null;
+
+if (req.file) {
+  req.file.buffer = null;
+  req.file = null;
+}
+
+}
+});
 
 
 
