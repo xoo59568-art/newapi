@@ -720,6 +720,64 @@ app.get("/api/play", async (req, res) => {
   }
 });
 
+
+
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// 🎵 For testing 
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+
+app.get("/aud/:id", async (req, res) => {
+  try {
+    const response = await axios({
+      method: "GET",
+      url: `https://api.sayan-nexuswork.workers.dev/stream?v=${req.params.id}`,
+      responseType: "stream",
+      headers: {
+        "User-Agent":
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/137.0.0.0 Safari/537.36",
+        "Accept": "*/*",
+        "Accept-Encoding": "identity",
+        "Connection": "keep-alive"
+      },
+      maxRedirects: 5
+    });
+
+    res.status(response.status);
+
+    Object.entries(response.headers).forEach(([key, value]) => {
+      if (
+        ![
+          "content-encoding",
+          "transfer-encoding",
+          "connection"
+        ].includes(key.toLowerCase())
+      ) {
+        res.setHeader(key, value);
+      }
+    });
+
+    response.data.pipe(res);
+
+  } catch (err) {
+    console.error(err.response?.status, err.response?.data);
+
+    res.status(err.response?.status || 500).json({
+      success: false,
+      error: err.message,
+      status: err.response?.status
+    });
+  }
+});
+
+
+
+
+
+
+
+
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // 🎵 SONG / YTMP3
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
