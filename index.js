@@ -21,7 +21,7 @@ const io = new Server(server, {
 
 global.botSockets = new Map();
 let SERVER_COUNT = 0;
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 4000;
 
 app.set("trust proxy", true);
 
