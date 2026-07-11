@@ -783,7 +783,7 @@ app.get("/aud/:id", async (req, res) => {
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 
-app.get("/api/song", async (req, res) => {
+app.get("/api/song1", async (req, res) => {
 noCache(res);
 
 try {
@@ -839,7 +839,7 @@ error: err.message
 }
 });
 
-app.get("/audio/:id", async (req, res) => {
+app.get("/audio1/:id", async (req, res) => {
 try {
 
 const target =
@@ -866,44 +866,99 @@ error: err.message
 
 
 
-app.get("/api/gan", async (req, res) => {
+app.get("/api/song", async (req, res) => {
   noCache(res);
+
   try {
     const { url } = req.query;
-    if (!url) return res.status(400).json({ success: false, creator: CREATOR, message: "YouTube URL required" });
+
+    if (!url) {
+      return res.status(400).json({
+        success: false,
+        creator: CREATOR,
+        message: "YouTube URL required"
+      });
+    }
 
     const { data } = await ax.get(
-      `https://api.sayan-nexuswork.workers.dev/play?query=${encodeURIComponent(url)}`
+      `https://rabbitapii.xoo59568.workers.dev/api/ytmp3?url=${encodeURIComponent(url)}`
     );
 
-  if (!data?.status || !data?.url) {
-return res.status(404).json({
-success: false,
-creator: CREATOR,
-message: "Song not found"
-});
+    if (!data?.success || !data?.result?.url) {
+      return res.status(404).json({
+        success: false,
+        creator: CREATOR,
+        message: "Song not found"
+      });
     }
-    
 
-    res.json({
+    const audioUrl = `${req.protocol}://${req.get("host")}/audio?url=${encodeURIComponent(data.result.url)}`;
+
+    return res.json({
       success: true,
       creator: CREATOR,
       result: {
-        title: data.title,
-        format: "MP3",
-        
-        url: data.url,
-        mp3: data.url,
-        audio: data.url,
-        download: data.url
+        title: data.result.title,
+        format: data.result.format || "MP3",
+        url: audioUrl,
+        mp3: audioUrl,
+        audio: audioUrl,
+        download: audioUrl
       }
     });
+
   } catch (err) {
-    res.status(500).json({ success: false, creator: CREATOR, error: err.message });
+    return res.status(500).json({
+      success: false,
+      creator: CREATOR,
+      error: err.message
+    });
   }
 });
 
+app.get("/audio", async (req, res) => {
+  try {
+    const { url } = req.query;
 
+    if (!url) {
+      return res.status(400).json({
+        success: false,
+        message: "Missing url"
+      });
+    }
+
+    const response = await ax({
+      url,
+      method: "GET",
+      responseType: "stream",
+      headers: {
+        "User-Agent": "Mozilla/5.0"
+      }
+    });
+
+    res.setHeader(
+      "Content-Type",
+      response.headers["content-type"] || "audio/mpeg"
+    );
+
+    if (response.headers["content-length"]) {
+      res.setHeader(
+        "Content-Length",
+        response.headers["content-length"]
+      );
+    }
+
+    res.setHeader("Cache-Control", "public, max-age=86400");
+
+    response.data.pipe(res);
+
+  } catch (err) {
+    return res.status(500).json({
+      success: false,
+      error: err.message
+    });
+  }
+});
 
 
 
