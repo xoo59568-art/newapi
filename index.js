@@ -889,11 +889,12 @@ app.get("/api/song", async (req, res) => {
       });
     }
 
+    // David API
     const { data } = await ax.get(
-      `https://rabbitapii.xoo59568.workers.dev/api/ytmp3?url=${encodeURIComponent(url)}`
+      `https://apis.davidcyril.name.ng/download/savetube?url=${encodeURIComponent(url)}&format=mp3`
     );
 
-    if (!data?.success || !data?.result?.url) {
+    if (!data?.success || !data?.data?.download_url) {
       return res.status(404).json({
         success: false,
         creator: CREATOR,
@@ -901,21 +902,28 @@ app.get("/api/song", async (req, res) => {
       });
     }
 
+    // Random 5-character ID
     const id = randomId();
 
-    mediaCache.set(id + ".mp3", data.result.url);
+    // Cache original URL
+    mediaCache.set(id + ".mp3", data.data.download_url);
 
+    // Auto delete after 10 minutes
     setTimeout(() => {
       mediaCache.delete(id + ".mp3");
     }, 10 * 60 * 1000);
 
+    // Your own proxy URL
     const proxy = `${req.protocol}://${req.get("host")}/media/${id}.mp3`;
 
     return res.json({
       success: true,
       creator: CREATOR,
       result: {
-        title: data.result.title,
+        title: data.data.title,
+        duration: data.data.duration,
+        quality: data.data.quality,
+        thumbnail: data.data.cover,
         format: "MP3",
         url: proxy,
         mp3: proxy,
@@ -924,15 +932,14 @@ app.get("/api/song", async (req, res) => {
       }
     });
 
-  } catch (e) {
-    res.status(500).json({
+  } catch (err) {
+    return res.status(500).json({
       success: false,
       creator: CREATOR,
-      error: e.message
+      error: err.message
     });
   }
 });
-
 
 
 
