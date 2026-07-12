@@ -32,6 +32,24 @@ const upload = multer({
 
 const CREATOR = "𓋜 -𝐑ᴀ፝֟፝֟ʙʙɪᴛ/>𝟑ن𓂃";
 
+
+const mediaCache = new Map();
+
+function randomId(len = 5) {
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  let id = "";
+
+  do {
+    id = "";
+    for (let i = 0; i < len; i++) {
+      id += chars[Math.floor(Math.random() * chars.length)];
+    }
+  } while (mediaCache.has(id + ".mp3"));
+
+  return id;
+}
+
+
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━
 // HTTPS AGENT — no keepAlive
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -857,15 +875,6 @@ error: err.message
 
 
 
-
-
-
-
-
-
-
-
-
 app.get("/api/song", async (req, res) => {
   noCache(res);
 
@@ -892,48 +901,58 @@ app.get("/api/song", async (req, res) => {
       });
     }
 
-    const audioUrl = `${req.protocol}://${req.get("host")}/audio?url=${encodeURIComponent(data.result.url)}`;
+    const id = randomId();
+
+    mediaCache.set(id + ".mp3", data.result.url);
+
+    setTimeout(() => {
+      mediaCache.delete(id + ".mp3");
+    }, 10 * 60 * 1000);
+
+    const proxy = `${req.protocol}://${req.get("host")}/media/${id}.mp3`;
 
     return res.json({
       success: true,
       creator: CREATOR,
       result: {
         title: data.result.title,
-        format: data.result.format || "MP3",
-        url: audioUrl,
-        mp3: audioUrl,
-        audio: audioUrl,
-        download: audioUrl
+        format: "MP3",
+        url: proxy,
+        mp3: proxy,
+        audio: proxy,
+        download: proxy
       }
     });
 
-  } catch (err) {
-    return res.status(500).json({
+  } catch (e) {
+    res.status(500).json({
       success: false,
       creator: CREATOR,
-      error: err.message
+      error: e.message
     });
   }
 });
 
-app.get("/audio", async (req, res) => {
+
+
+
+
+app.get("/media/:file", async (req, res) => {
   try {
-    const { url } = req.query;
+
+    const url = mediaCache.get(req.params.file);
 
     if (!url) {
-      return res.status(400).json({
+      return res.status(404).json({
         success: false,
-        message: "Missing url"
+        message: "Link expired"
       });
     }
 
     const response = await ax({
       url,
       method: "GET",
-      responseType: "stream",
-      headers: {
-        "User-Agent": "Mozilla/5.0"
-      }
+      responseType: "stream"
     });
 
     res.setHeader(
@@ -948,14 +967,12 @@ app.get("/audio", async (req, res) => {
       );
     }
 
-    res.setHeader("Cache-Control", "public, max-age=86400");
-
     response.data.pipe(res);
 
-  } catch (err) {
-    return res.status(500).json({
+  } catch (e) {
+    res.status(500).json({
       success: false,
-      error: err.message
+      error: e.message
     });
   }
 });
@@ -963,6 +980,8 @@ app.get("/audio", async (req, res) => {
 
 
 
+
+    
 
 
 
