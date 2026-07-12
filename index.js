@@ -522,6 +522,7 @@ app.get("/api/dwnall", async (req, res) => {
 
     const ss = cacheMedia(req, result.low || null, ".mp4");
     const hd = cacheMedia(req, result.high || null, ".mp4");
+    const thumbnail = cacheMedia(req, result.thumbnail || null, ".jpg");
 
     return res.json({
       success: true,
@@ -529,7 +530,7 @@ app.get("/api/dwnall", async (req, res) => {
 
       result: {
         title: result.title || "Unknown",
-        thumbnail: result.thumbnail || null,
+        thumbnail,
 
         ss,
         hd
@@ -597,11 +598,12 @@ app.get("/api/insta", async (req, res) => {
     );
 
     const proxy = cacheMedia(req, data.data[0].url, ".mp4");
+    const thumbnail = cacheMedia(req, data.data[0].thumbnail, ".jpg");
 
     res.json({
       status: true,
       creator: CREATOR,
-      thumbnail: data.data[0].thumbnail,
+      thumbnail,
       url: proxy
     });
   } catch {
@@ -621,13 +623,14 @@ app.get("/api/insta2", async (req, res) => {
 
     const fileExt = data.ext ? `.${data.ext}` : ".mp4";
     const proxy = cacheMedia(req, data.data[0].url, fileExt);
+    const thumbnail = cacheMedia(req, data.data[0].thumbnail, ".jpg");
 
     res.json({
       status: true,
       creator: CREATOR,
       quality: data.quality,
       ext: data.ext,
-      thumbnail: data.data[0].thumbnail,
+      thumbnail,
       url: proxy
     });
   } catch (e) {
@@ -1305,13 +1308,14 @@ app.get("/api/pinterest", async (req, res) => {
     );
 
     const proxy = cacheMedia(req, data.url, ".mp4");
+    const thumbnail = cacheMedia(req, data.thumbnail, ".jpg");
 
     res.json({
       status: true,
       creator: CREATOR,
       title: data.title,
       author: data.author,
-      thumbnail: data.thumbnail,
+      thumbnail,
       url: proxy
     });
   } catch (err) {
@@ -1336,12 +1340,13 @@ app.get("/api/pint", async (req, res) => {
 
     const ext = video.extension ? `.${video.extension}` : ".mp4";
     const proxy = cacheMedia(req, video.url, ext);
+    const thumbnail = cacheMedia(req, data.data.thumbnail, ".jpg");
 
     res.json({
       status: true,
       creator: CREATOR,
       title: data.data.title,
-      thumbnail: data.data.thumbnail,
+      thumbnail,
       quality: video.quality,
       ext: video.extension,
       size: video.formattedSize,
