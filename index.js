@@ -35,7 +35,7 @@ const CREATOR = "𓋜 -𝐑ᴀ፝֟፝֟ʙʙɪᴛ/>𝟑ن𓂃";
 
 const mediaCache = new Map();
 
-function randomId(len = 5) {
+function randomId(len = 5, ext = ".mp3") {
   const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
   let id = "";
 
@@ -44,9 +44,31 @@ function randomId(len = 5) {
     for (let i = 0; i < len; i++) {
       id += chars[Math.floor(Math.random() * chars.length)];
     }
-  } while (mediaCache.has(id + ".mp3"));
+  } while (mediaCache.has(id + ext));
 
   return id;
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━
+// GENERIC MEDIA PROXY CACHE
+// (same pattern as /api/song)
+// Caches a remote URL and returns
+// your own domain proxy link that
+// streams it through /media/:file
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━
+function cacheMedia(req, sourceUrl, ext = ".mp4", ttlMs = 10 * 60 * 1000) {
+  if (!sourceUrl) return null;
+
+  const id = randomId(5, ext);
+  const file = id + ext;
+
+  mediaCache.set(file, sourceUrl);
+
+  setTimeout(() => {
+    mediaCache.delete(file);
+  }, ttlMs);
+
+  return `${req.protocol}://${req.get("host")}/media/${file}`;
 }
 
 
@@ -498,6 +520,9 @@ app.get("/api/dwnall", async (req, res) => {
 
     const result = data.data;
 
+    const ss = cacheMedia(req, result.low || null, ".mp4");
+    const hd = cacheMedia(req, result.high || null, ".mp4");
+
     return res.json({
       success: true,
       creator: CREATOR,
@@ -506,8 +531,8 @@ app.get("/api/dwnall", async (req, res) => {
         title: result.title || "Unknown",
         thumbnail: result.thumbnail || null,
 
-        ss: result.low || null,
-        hd: result.high || null
+        ss,
+        hd
       }
     });
 
@@ -553,7 +578,9 @@ app.get("/api/instagram", async (req, res) => {
       `https://api-faa.my.id/faa/igdl?url=${encodeURIComponent(url)}`
     );
 
-    res.json({ status: true, creator: CREATOR, url: data.result });
+    const proxy = cacheMedia(req, data.result, ".mp4");
+
+    res.json({ status: true, creator: CREATOR, url: proxy });
   } catch {
     res.json({ status: false, creator: CREATOR });
   }
@@ -569,11 +596,13 @@ app.get("/api/insta", async (req, res) => {
       `https://api-aswin-sparky.koyeb.app/api/downloader/igdl?url=${encodeURIComponent(url)}`
     );
 
+    const proxy = cacheMedia(req, data.data[0].url, ".mp4");
+
     res.json({
       status: true,
       creator: CREATOR,
       thumbnail: data.data[0].thumbnail,
-      url: data.data[0].url
+      url: proxy
     });
   } catch {
     res.json({ status: false, creator: CREATOR });
@@ -590,13 +619,16 @@ app.get("/api/insta2", async (req, res) => {
       `https://api-aswin-sparky.koyeb.app/api/downloader/igdl?url=${encodeURIComponent(url)}`
     );
 
+    const fileExt = data.ext ? `.${data.ext}` : ".mp4";
+    const proxy = cacheMedia(req, data.data[0].url, fileExt);
+
     res.json({
       status: true,
       creator: CREATOR,
       quality: data.quality,
       ext: data.ext,
       thumbnail: data.data[0].thumbnail,
-      url: data.data[0].url
+      url: proxy
     });
   } catch (e) {
     res.json({ status: false, creator: CREATOR, error: e.message });
@@ -618,13 +650,16 @@ app.get("/api/fb", async (req, res) => {
       { timeout: 120000 }
     );
 
+    const hd = cacheMedia(req, data?.data?.high || null, ".mp4");
+    const sd = cacheMedia(req, data?.data?.low || null, ".mp4");
+
     res.json({
       status: true,
       creator: CREATOR,
       title: data?.data?.title || null,
       thumbnail: data?.data?.thumbnail || null,
-      hd: data?.data?.high || null,
-      sd: data?.data?.low || null
+      hd,
+      sd
     });
   } catch (err) {
     res.status(500).json({ status: false, creator: CREATOR, message: err.message });
@@ -641,7 +676,9 @@ app.get("/api/fb2", async (req, res) => {
       `https://apiskeith.top/download/fbdown?url=${encodeURIComponent(url)}`
     );
 
-    res.json({ status: true, creator: CREATOR, result: data.result });
+    const proxy = cacheMedia(req, data.result, ".mp4");
+
+    res.json({ status: true, creator: CREATOR, result: proxy });
   } catch {
     res.json({ status: false, creator: CREATOR });
   }
@@ -657,7 +694,10 @@ app.get("/api/fb3", async (req, res) => {
       `https://rabbitapi.nett.to/api/fb?url=${encodeURIComponent(url)}`
     );
 
-    res.json({ status: true, creator: CREATOR, sd: data.sd, hd: data.hd });
+    const sd = cacheMedia(req, data.sd, ".mp4");
+    const hd = cacheMedia(req, data.hd, ".mp4");
+
+    res.json({ status: true, creator: CREATOR, sd, hd });
   } catch {
     res.json({ status: false, creator: CREATOR });
   }
@@ -673,7 +713,9 @@ app.get("/api/facebook", async (req, res) => {
       `https://apis.davidcyril.name.ng/facebook2?url=${encodeURIComponent(url)}`
     );
 
-    res.json({ status: true, creator: CREATOR, result: data.video });
+    const proxy = cacheMedia(req, data.video, ".mp4");
+
+    res.json({ status: true, creator: CREATOR, result: proxy });
   } catch {
     res.json({ status: false, creator: CREATOR });
   }
@@ -1209,6 +1251,8 @@ app.get("/api/spotify", async (req, res) => {
       `https://jerrycoder.oggyapi.workers.dev/down/spotify?url=${encodeURIComponent(url)}`
     );
 
+    const proxy = cacheMedia(req, data.download_link, ".mp3");
+
     res.json({
       status: true,
       creator: CREATOR,
@@ -1216,7 +1260,7 @@ app.get("/api/spotify", async (req, res) => {
       artist: data.artist,
       duration: data.duration,
       thumbnail: data.thumbnail,
-      url: data.download_link
+      url: proxy
     });
   } catch (err) {
     res.status(500).json({ status: false, creator: CREATOR, message: "Internal Server Error" });
@@ -1260,13 +1304,15 @@ app.get("/api/pinterest", async (req, res) => {
       `https://jerrycoder.oggyapi.workers.dev/down/pinterest?url=${encodeURIComponent(url)}`
     );
 
+    const proxy = cacheMedia(req, data.url, ".mp4");
+
     res.json({
       status: true,
       creator: CREATOR,
       title: data.title,
       author: data.author,
       thumbnail: data.thumbnail,
-      url: data.url
+      url: proxy
     });
   } catch (err) {
     res.status(500).json({ status: false, creator: CREATOR, message: "Internal Server Error" });
@@ -1288,6 +1334,9 @@ app.get("/api/pint", async (req, res) => {
     const medias = data.data.medias || [];
     const video = medias.find(v => v.extension === "mp4") || medias[0];
 
+    const ext = video.extension ? `.${video.extension}` : ".mp4";
+    const proxy = cacheMedia(req, video.url, ext);
+
     res.json({
       status: true,
       creator: CREATOR,
@@ -1296,7 +1345,7 @@ app.get("/api/pint", async (req, res) => {
       quality: video.quality,
       ext: video.extension,
       size: video.formattedSize,
-      url: video.url
+      url: proxy
     });
   } catch (e) {
     res.json({ status: false, creator: CREATOR, error: e.message });
