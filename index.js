@@ -174,7 +174,10 @@ app.get("/upload", (req, res) => {
   noCache(res);
   res.sendFile(__dirname + "/upload.html");
 });
-
+app.get("/removebg", (req, res) => {
+  noCache(res);
+  res.sendFile(__dirname + "/removebg.html");
+});
 app.get("/category/downloader", (req, res) => {
   noCache(res);
   res.sendFile(__dirname + "/category/downloader.html");
