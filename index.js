@@ -1406,6 +1406,92 @@ app.get("/tool/webss", async (req, res) => {
 });
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// 🖼️ REMOVE BACKGROUND
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+app.get("/api/removebg", async (req, res) => {
+  noCache(res);
+  try {
+    const { url } = req.query;
+    if (!url) return res.status(400).json({
+      status: false, creator: CREATOR, message: "Image URL required"
+    });
+
+    const { data } = await ax.get(
+      `https://jerrycoder-rembg-as.hf.space/json?url=${encodeURIComponent(url)}`,
+      { timeout: 60000 }
+    );
+
+    if (data?.status !== "success" || !data?.result?.url) {
+      return res.status(404).json({
+        status: false,
+        creator: CREATOR,
+        message: "Failed to remove background"
+      });
+    }
+
+    const proxy = cacheMedia(req, data.result.url, ".png");
+
+    res.json({
+      status: "success",
+      creator: CREATOR,
+      result: {
+        url: proxy
+      }
+    });
+  } catch (err) {
+    res.status(500).json({ status: false, creator: CREATOR, error: err.message });
+  }
+});
+
+app.post("/api/removebg", upload.single("image"), async (req, res) => {
+  noCache(res);
+  try {
+    if (!req.file) return res.status(400).json({
+      status: false, creator: CREATOR, message: "Image file required"
+    });
+
+    const form = new FormData();
+    form.append("image", req.file.buffer, {
+      filename: req.file.originalname || "image.png",
+      contentType: req.file.mimetype
+    });
+
+    const { data } = await ax.post(
+      "https://jerrycoder-rembg-as.hf.space/upload",
+      form,
+      {
+        headers: form.getHeaders(),
+        timeout: 60000,
+        maxBodyLength: Infinity
+      }
+    );
+
+    if (data?.status !== "success" || !data?.result?.url) {
+      return res.status(404).json({
+        status: false,
+        creator: CREATOR,
+        message: "Failed to remove background"
+      });
+    }
+
+    const proxy = cacheMedia(req, data.result.url, ".png");
+
+    res.json({
+      status: "success",
+      creator: CREATOR,
+      result: {
+        url: proxy
+      }
+    });
+  } catch (err) {
+    res.status(500).json({ status: false, creator: CREATOR, error: err.message });
+  } finally {
+    if (req.file) req.file.buffer = null;
+  }
+});
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // 🎤 LYRICS
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
