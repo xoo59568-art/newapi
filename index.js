@@ -71,6 +71,26 @@ function cacheMedia(req, sourceUrl, ext = ".mp4", ttlMs = 10 * 60 * 1000) {
   return `${req.protocol}://${req.get("host")}/media/${file}`;
 }
 
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━
+// BUFFER-BASED MEDIA CACHE
+// For upstream APIs that stream
+// raw bytes back directly instead
+// of returning a JSON URL
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━
+function cacheBufferMedia(req, buffer, contentType = "application/octet-stream", ext = ".png", ttlMs = 10 * 60 * 1000) {
+  if (!buffer) return null;
+
+  const id = randomId(5, ext);
+  const file = id + ext;
+
+  mediaCache.set(file, { buffer, contentType });
+
+  setTimeout(() => {
+    mediaCache.delete(file);
+  }, ttlMs);
+
+  return `${req.protocol}://${req.get("host")}/media/${file}`;
+}
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━
 // HTTPS AGENT — no keepAlive
@@ -174,15 +194,15 @@ app.get("/upload", (req, res) => {
   noCache(res);
   res.sendFile(__dirname + "/upload.html");
 });
-app.get("/removebg", (req, res) => {
-  noCache(res);
-  res.sendFile(__dirname + "/removebg.html");
-});
+
 app.get("/category/downloader", (req, res) => {
   noCache(res);
   res.sendFile(__dirname + "/category/downloader.html");
 });
-
+app.get("/removebg", (req, res) => {
+  noCache(res);
+  res.sendFile(__dirname + "/removebg.html");
+});
 
 app.get("/api.html", (req, res) => {
   noCache(res);
@@ -995,14 +1015,24 @@ app.get("/api/song", async (req, res) => {
 app.get("/media/:file", async (req, res) => {
   try {
 
-    const url = mediaCache.get(req.params.file);
+    const entry = mediaCache.get(req.params.file);
 
-    if (!url) {
+    if (!entry) {
       return res.status(404).json({
         success: false,
         message: "Link expired"
       });
     }
+
+    // Buffer-based entry — serve directly, no upstream fetch needed
+    if (Buffer.isBuffer(entry?.buffer)) {
+      res.setHeader("Content-Type", entry.contentType || "application/octet-stream");
+      res.setHeader("Content-Length", entry.buffer.length);
+      return res.end(entry.buffer);
+    }
+
+    // URL-based entry — proxy stream from the original source
+    const url = entry;
 
     const response = await ax({
       url,
@@ -1421,23 +1451,21 @@ app.get("/api/removebg", async (req, res) => {
     });
 
     const response = await ax.get(
-      `https://jerrycoder-rembg-as.hf.space/json?url=${encodeURIComponent(url)}`,
-      { timeout: 60000 }
+      `https://api.danzy.web.id/api/maker/removebg?url=${encodeURIComponent(url)}`,
+      { timeout: 60000, responseType: "arraybuffer" }
     );
 
-    const data = response.data;
-    const bgUrl = data?.url || data?.full_url;
-
-    if (data?.status !== "success" || !bgUrl) {
+    const contentType = response.headers["content-type"] || "image/png";
+    if (!contentType.startsWith("image")) {
       return res.status(502).json({
         status: false,
         creator: CREATOR,
-        message: "Failed to remove background",
-        debug: data
+        message: "Failed to remove background"
       });
     }
 
-    const proxy = cacheMedia(req, bgUrl, ".png");
+    const buffer = Buffer.from(response.data);
+    const proxy = cacheBufferMedia(req, buffer, contentType, ".png");
 
     res.json({
       status: "success",
@@ -1450,8 +1478,7 @@ app.get("/api/removebg", async (req, res) => {
     res.status(500).json({
       status: false,
       creator: CREATOR,
-      error: err.message,
-      upstream: err.response?.data || null
+      error: err.message
     });
   }
 });
@@ -1463,50 +1490,33 @@ app.post("/api/removebg", upload.single("image"), async (req, res) => {
       status: false, creator: CREATOR, message: "Image file required"
     });
 
-    const fieldNames = ["image", "file", "photo", "img"];
-    let data = null;
-    let lastError = null;
+    // Host the uploaded file temporarily on our own domain so the
+    // upstream removal API (which only accepts a URL) can fetch it
+    const ext = "." + (req.file.originalname?.split(".").pop() || "jpg").toLowerCase();
+    const tempUrl = cacheBufferMedia(
+      req,
+      req.file.buffer,
+      req.file.mimetype || "image/jpeg",
+      ext,
+      5 * 60 * 1000 // short-lived — only needs to survive the upstream fetch
+    );
 
-    for (const field of fieldNames) {
-      try {
-        const form = new FormData();
-        form.append(field, req.file.buffer, {
-          filename: req.file.originalname || "image.png",
-          contentType: req.file.mimetype
-        });
+    const response = await ax.get(
+      `https://api.danzy.web.id/api/maker/removebg?url=${encodeURIComponent(tempUrl)}`,
+      { timeout: 60000, responseType: "arraybuffer" }
+    );
 
-        const response = await ax.post(
-          "https://jerrycoder-rembg-as.hf.space/upload",
-          form,
-          {
-            headers: form.getHeaders(),
-            timeout: 60000,
-            maxBodyLength: Infinity,
-            maxContentLength: Infinity
-          }
-        );
-
-        if (response.data?.status === "success" && (response.data?.url || response.data?.full_url)) {
-          data = response.data;
-          break;
-        } else {
-          lastError = { field, upstream: response.data };
-        }
-      } catch (e) {
-        lastError = { field, upstream: e.response?.data || e.message };
-      }
-    }
-
-    if (!data) {
+    const contentType = response.headers["content-type"] || "image/png";
+    if (!contentType.startsWith("image")) {
       return res.status(502).json({
         status: false,
         creator: CREATOR,
-        message: "Failed to remove background",
-        debug: lastError
+        message: "Failed to remove background"
       });
     }
 
-    const proxy = cacheMedia(req, data.url || data.full_url, ".png");
+    const buffer = Buffer.from(response.data);
+    const proxy = cacheBufferMedia(req, buffer, contentType, ".png");
 
     res.json({
       status: "success",
@@ -1519,8 +1529,7 @@ app.post("/api/removebg", upload.single("image"), async (req, res) => {
     res.status(500).json({
       status: false,
       creator: CREATOR,
-      error: err.message,
-      upstream: err.response?.data || null
+      error: err.message
     });
   } finally {
     if (req.file) req.file.buffer = null;
