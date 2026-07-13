@@ -1417,20 +1417,24 @@ app.get("/api/removebg", async (req, res) => {
       status: false, creator: CREATOR, message: "Image URL required"
     });
 
-    const { data } = await ax.get(
+    const response = await ax.get(
       `https://jerrycoder-rembg-as.hf.space/json?url=${encodeURIComponent(url)}`,
       { timeout: 60000 }
     );
 
-    if (data?.status !== "success" || !data?.result?.url) {
-      return res.status(404).json({
+    const data = response.data;
+    const bgUrl = data?.url || data?.full_url;
+
+    if (data?.status !== "success" || !bgUrl) {
+      return res.status(502).json({
         status: false,
         creator: CREATOR,
-        message: "Failed to remove background"
+        message: "Failed to remove background",
+        debug: data
       });
     }
 
-    const proxy = cacheMedia(req, data.result.url, ".png");
+    const proxy = cacheMedia(req, bgUrl, ".png");
 
     res.json({
       status: "success",
@@ -1440,7 +1444,12 @@ app.get("/api/removebg", async (req, res) => {
       }
     });
   } catch (err) {
-    res.status(500).json({ status: false, creator: CREATOR, error: err.message });
+    res.status(500).json({
+      status: false,
+      creator: CREATOR,
+      error: err.message,
+      upstream: err.response?.data || null
+    });
   }
 });
 
@@ -1451,31 +1460,50 @@ app.post("/api/removebg", upload.single("image"), async (req, res) => {
       status: false, creator: CREATOR, message: "Image file required"
     });
 
-    const form = new FormData();
-    form.append("image", req.file.buffer, {
-      filename: req.file.originalname || "image.png",
-      contentType: req.file.mimetype
-    });
+    const fieldNames = ["image", "file", "photo", "img"];
+    let data = null;
+    let lastError = null;
 
-    const { data } = await ax.post(
-      "https://jerrycoder-rembg-as.hf.space/upload",
-      form,
-      {
-        headers: form.getHeaders(),
-        timeout: 60000,
-        maxBodyLength: Infinity
+    for (const field of fieldNames) {
+      try {
+        const form = new FormData();
+        form.append(field, req.file.buffer, {
+          filename: req.file.originalname || "image.png",
+          contentType: req.file.mimetype
+        });
+
+        const response = await ax.post(
+          "https://jerrycoder-rembg-as.hf.space/upload",
+          form,
+          {
+            headers: form.getHeaders(),
+            timeout: 60000,
+            maxBodyLength: Infinity,
+            maxContentLength: Infinity
+          }
+        );
+
+        if (response.data?.status === "success" && (response.data?.url || response.data?.full_url)) {
+          data = response.data;
+          break;
+        } else {
+          lastError = { field, upstream: response.data };
+        }
+      } catch (e) {
+        lastError = { field, upstream: e.response?.data || e.message };
       }
-    );
+    }
 
-    if (data?.status !== "success" || !data?.result?.url) {
-      return res.status(404).json({
+    if (!data) {
+      return res.status(502).json({
         status: false,
         creator: CREATOR,
-        message: "Failed to remove background"
+        message: "Failed to remove background",
+        debug: lastError
       });
     }
 
-    const proxy = cacheMedia(req, data.result.url, ".png");
+    const proxy = cacheMedia(req, data.url || data.full_url, ".png");
 
     res.json({
       status: "success",
@@ -1485,7 +1513,12 @@ app.post("/api/removebg", upload.single("image"), async (req, res) => {
       }
     });
   } catch (err) {
-    res.status(500).json({ status: false, creator: CREATOR, error: err.message });
+    res.status(500).json({
+      status: false,
+      creator: CREATOR,
+      error: err.message,
+      upstream: err.response?.data || null
+    });
   } finally {
     if (req.file) req.file.buffer = null;
   }
