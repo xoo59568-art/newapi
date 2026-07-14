@@ -1003,8 +1003,7 @@ error: err.message
 
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━
-// SONG BACKENDS — raced in parallel,
-// fastest successful one wins
+// SONG BACKEND
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 async function fetchSongDavid(url) {
@@ -1026,25 +1025,6 @@ async function fetchSongDavid(url) {
   };
 }
 
-async function fetchSongJerry(url) {
-  const { data } = await ax.get(
-    `https://jerrycoder.oggyapi.workers.dev/down/ytmp3?url=${encodeURIComponent(url)}`,
-    { timeout: 10000, headers: JERRY_HEADERS }
-  );
-
-  if (data?.status !== "success" || !data?.url) {
-    throw new Error("source unavailable");
-  }
-
-  return {
-    title: data.title,
-    duration: data.duration,
-    quality: data.quality,
-    thumbnail: null,
-    downloadUrl: data.url
-  };
-}
-
 app.get("/api/song", async (req, res) => {
   noCache(res);
 
@@ -1059,22 +1039,18 @@ app.get("/api/song", async (req, res) => {
       });
     }
 
-    // Race both backends — first successful response wins
-    const winner = await Promise.any([
-      fetchSongDavid(url),
-      fetchSongJerry(url)
-    ]);
+    const result = await fetchSongDavid(url);
 
-    const proxy = cacheMedia(req, winner.downloadUrl, ".mp3");
+    const proxy = cacheMedia(req, result.downloadUrl, ".mp3");
 
     return res.json({
       success: true,
       creator: CREATOR,
       result: {
-        title: winner.title,
-        duration: winner.duration,
-        quality: winner.quality,
-        thumbnail: winner.thumbnail,
+        title: result.title,
+        duration: result.duration,
+        quality: result.quality,
+        thumbnail: result.thumbnail,
         format: "MP3",
         url: proxy,
         mp3: proxy,
@@ -1084,7 +1060,6 @@ app.get("/api/song", async (req, res) => {
     });
 
   } catch (err) {
-    // Both sources failed — return a clean generic error, no internal names
     return res.status(404).json({
       success: false,
       creator: CREATOR,
