@@ -34,6 +34,17 @@ const upload = multer({
 
 const CREATOR = "𓋜 -𝐑ᴀ፝֟፝֟ʙʙɪᴛ/>𝟑ن𓂃";
 
+// Browser-like headers for calls to jerrycoder.oggyapi.workers.dev —
+// some Cloudflare-protected workers block plain "axios/Mozilla" UAs
+// or requests missing Referer/Origin, so we mimic a real browser.
+const JERRY_HEADERS = {
+  "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36",
+  "Accept": "application/json, text/plain, */*",
+  "Accept-Language": "en-US,en;q=0.9",
+  "Referer": "https://jerrycoder.oggyapi.workers.dev/",
+  "Origin": "https://jerrycoder.oggyapi.workers.dev"
+};
+
 
 const mediaCache = new Map();
 
@@ -1018,7 +1029,7 @@ async function fetchSongDavid(url) {
 async function fetchSongJerry(url) {
   const { data } = await ax.get(
     `https://jerrycoder.oggyapi.workers.dev/down/ytmp3?url=${encodeURIComponent(url)}`,
-    { timeout: 10000 }
+    { timeout: 10000, headers: JERRY_HEADERS }
   );
 
   if (data?.status !== "success" || !data?.url) {
