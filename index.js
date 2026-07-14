@@ -1,7 +1,6 @@
 const express = require("express");
 const http = require("http");
 const { Server } = require("socket.io");
-const yts = require("yt-search");
 const axios = require("axios");
 const cheerio = require("cheerio");
 const https = require("https");
@@ -924,10 +923,13 @@ function normalizeVideo(v) {
   };
 }
 
-async function searchViaYts(query) {
-  const search = await yts(query);
-  const v = search.videos && search.videos[0];
-  if (!v) throw new Error("no result");
+async function searchViaDanzy(query) {
+  const { data } = await ax.get(
+    `https://api.danzy.web.id/api/search/yts?q=${encodeURIComponent(query)}`,
+    { timeout: 8000 }
+  );
+  const v = data?.result?.[0];
+  if (!data?.status || !v) throw new Error("no result");
   return normalizeVideo(v);
 }
 
@@ -987,7 +989,7 @@ async function fastYoutubeSearch(query) {
   }
 
   const video = await Promise.any([
-    searchViaYts(query),
+    searchViaDanzy(query),
     searchViaRabbit(query),
     searchViaDirect(query)
   ]);
@@ -1410,18 +1412,29 @@ app.get("/search/youtube", async (req, res) => {
       example: "/search/youtube?q=alan walker&limit=5"
     });
 
-    const search = await yts(searchQuery);
+    const { data } = await ax.get(
+      `https://api.danzy.web.id/api/search/yts?q=${encodeURIComponent(searchQuery)}`,
+      { timeout: 15000 }
+    );
 
-    const videos = search.videos.slice(0, searchLimit).map((v, i) => ({
+    if (!data?.status || !Array.isArray(data.result) || !data.result.length) {
+      return res.status(404).json({
+        status: false,
+        creator: CREATOR,
+        message: "No results found"
+      });
+    }
+
+    const videos = data.result.slice(0, searchLimit).map((v, i) => ({
       id: i + 1,
       title: v.title,
       url: v.url,
       videoId: v.videoId,
-      duration: v.timestamp,
+      duration: v.duration,
       views: v.views,
-      uploaded: v.ago,
+      uploaded: v.uploaded,
       thumbnail: v.thumbnail,
-      author: { name: v.author.name, url: v.author.url }
+      author: { name: null, url: null }
     }));
 
     res.json({
@@ -1433,7 +1446,7 @@ app.get("/search/youtube", async (req, res) => {
       result: videos
     });
   } catch (e) {
-    res.status(500).json({ status: false, creator: CREATOR, error: e.message });
+    res.status(500).json({ status: false, creator: CREATOR, message: "Search failed" });
   }
 });
 
