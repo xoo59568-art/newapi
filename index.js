@@ -5,6 +5,8 @@ const yts = require("yt-search");
 const axios = require("axios");
 const cheerio = require("cheerio");
 const https = require("https");
+const dns = require("dns");
+const crypto = require("crypto");
 const gis = require("g-i-s");
 const multer = require("multer");
 const FormData = require("form-data");
@@ -36,17 +38,10 @@ const CREATOR = "𓋜 -𝐑ᴀ፝֟፝֟ʙʙɪᴛ/>𝟑ن𓂃";
 const mediaCache = new Map();
 
 function randomId(len = 5, ext = ".mp3") {
-  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-  let id = "";
-
-  do {
-    id = "";
-    for (let i = 0; i < len; i++) {
-      id += chars[Math.floor(Math.random() * chars.length)];
-    }
-  } while (mediaCache.has(id + ext));
-
-  return id;
+  // crypto.randomBytes is faster than a per-character Math.random loop,
+  // and with this much entropy a collision-check against mediaCache
+  // is unnecessary overhead — the odds are astronomically low.
+  return crypto.randomBytes(Math.ceil(len * 0.75)).toString("base64url").slice(0, len);
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -126,6 +121,31 @@ const keepAliveHttpAgent = new http.Agent({
 });
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━
+// DNS CACHE — skips a fresh DNS
+// lookup on every outbound call to
+// the same upstream host
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━
+const dnsCache = new Map();
+const DNS_TTL = 5 * 60 * 1000;
+
+function cachedLookup(hostname, options, callback) {
+  if (typeof options === "function") {
+    callback = options;
+    options = {};
+  }
+
+  const hit = dnsCache.get(hostname);
+  if (hit && Date.now() - hit.time < DNS_TTL) {
+    return callback(null, hit.address, hit.family);
+  }
+
+  dns.lookup(hostname, options, (err, address, family) => {
+    if (!err) dnsCache.set(hostname, { address, family, time: Date.now() });
+    callback(err, address, family);
+  });
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━
 // AXIOS DEFAULT CONFIG
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━
 const ax = axios.create({
@@ -134,7 +154,8 @@ const ax = axios.create({
   maxRedirects: 5,
   decompress: true,
   httpsAgent: keepAliveHttpsAgent,
-  httpAgent: keepAliveHttpAgent
+  httpAgent: keepAliveHttpAgent,
+  lookup: cachedLookup
 });
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -978,7 +999,7 @@ error: err.message
 async function fetchSongDavid(url) {
   const { data } = await ax.get(
     `https://apis.davidcyril.name.ng/download/savetube?url=${encodeURIComponent(url)}&format=mp3`,
-    { timeout: 15000 }
+    { timeout: 10000 }
   );
 
   if (!data?.success || !data?.data?.download_url) {
@@ -997,7 +1018,7 @@ async function fetchSongDavid(url) {
 async function fetchSongJerry(url) {
   const { data } = await ax.get(
     `https://jerrycoder.oggyapi.workers.dev/down/ytmp3?url=${encodeURIComponent(url)}`,
-    { timeout: 15000 }
+    { timeout: 10000 }
   );
 
   if (data?.status !== "success" || !data?.url) {
@@ -1900,9 +1921,33 @@ app.get("/api/channel/react", async (req, res) => {
 });
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// 🔥 CONNECTION WARM-UP
+// Opens/keeps a socket ready to the
+// most frequently used backends so
+// real requests don't pay the cold
+// TLS handshake cost.
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+const WARM_HOSTS = [
+  "https://apis.davidcyril.name.ng",
+  "https://jerrycoder.oggyapi.workers.dev",
+  "https://api.danzy.web.id",
+  "https://ar-hosting.pages.dev"
+];
+
+function warmConnections() {
+  WARM_HOSTS.forEach(host => {
+    ax.get(host, { timeout: 5000 }).catch(() => {});
+  });
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // 🚀 START
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 server.listen(PORT, () => {
   console.log("Server running on port " + PORT);
+  warmConnections();
+  // Keep the keep-alive sockets warm every 4 minutes
+  setInterval(warmConnections, 4 * 60 * 1000);
 });
