@@ -223,6 +223,79 @@ setInterval(() => {
 // abuse protection.
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
+const ipCheckCache = new Map(); // ip -> { blocked, time }
+const IP_CHECK_TTL = 60 * 60 * 1000; // re-check each IP once per hour
+
+const HOSTING_KEYWORDS = [
+  "amazon", "aws", "google cloud", "google llc", "microsoft", "azure",
+  "digitalocean", "linode", "akamai", "vultr", "ovh", "hetzner",
+  "render", "heroku", "railway", "vercel", "netlify", "fly.io", "fly io",
+  "contabo", "hostinger", "oracle cloud", "alibaba", "tencent",
+  "scaleway", "leaseweb", "choopa", "packet", "upcloud", "salad",
+  "datacamp", "psychz", "colocrossing", "server", "hosting"
+];
+
+// Never block these even if flagged — avoids accidentally
+// locking out normal ISPs whose names happen to contain a keyword
+const ALLOW_KEYWORDS = ["mobile", "wireless", "broadband", "telecom", "fiber", "cable"];
+
+async function isHostingIP(ip) {
+  if (!ip) return false;
+
+  // Always allow local/private IPs (health checks, same-machine calls)
+  if (ip === "127.0.0.1" || ip === "::1" || ip.startsWith("10.") || ip.startsWith("192.168.")) {
+    return false;
+  }
+
+  const cached = ipCheckCache.get(ip);
+  if (cached && Date.now() - cached.time < IP_CHECK_TTL) {
+    return cached.blocked;
+  }
+
+  try {
+    const { data } = await ax.get(
+      `http://ip-api.com/json/${encodeURIComponent(ip)}?fields=isp,org,as,proxy,hosting`,
+      { timeout: 3000 }
+    );
+
+    const text = `${data.isp || ""} ${data.org || ""} ${data.as || ""}`.toLowerCase();
+
+    const isAllowed = ALLOW_KEYWORDS.some(k => text.includes(k));
+    const isFlagged =
+      data.hosting === true ||
+      data.proxy === true ||
+      HOSTING_KEYWORDS.some(k => text.includes(k));
+
+    const blocked = isFlagged && !isAllowed;
+
+    ipCheckCache.set(ip, { blocked, time: Date.now() });
+    return blocked;
+  } catch {
+    // If the lookup service itself fails, fail OPEN —
+    // never take the whole API down because a checker timed out
+    return false;
+  }
+}
+
+app.use(async (req, res, next) => {
+  try {
+    const ip = req.ip || req.connection?.remoteAddress || "";
+    const blocked = await isHostingIP(ip);
+
+    if (blocked) {
+      noCache(res);
+      return res.status(403).json({
+        success: false,
+        creator: CREATOR,
+        message: "Access denied — requests from hosting/datacenter IPs are not allowed"
+      });
+    }
+
+    next();
+  } catch {
+    next(); // never block traffic because our own middleware errored
+  }
+});
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // PAGES
