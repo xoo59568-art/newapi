@@ -208,6 +208,97 @@ setInterval(() => {
 }, 30000);
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// 🚫 HOSTING / DATACENTER IP BLOCKER
+// Blocks requests coming from known cloud
+// hosting providers (Render, Heroku, AWS,
+// GCP, Azure, DigitalOcean, etc.) so people
+// can't run a proxy/wrapper of this API from
+// their own server. Real users on residential
+// or mobile networks pass through untouched.
+//
+// NOTE: this is a best-effort heuristic based
+// on the requester IP's ISP/Org name — it is
+// NOT as strong as Cloudflare's ASN-level bot
+// blocking, and a determined attacker can route
+// around it. Pair with rate-limiting for real
+// abuse protection.
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+const ipCheckCache = new Map(); // ip -> { blocked, time }
+const IP_CHECK_TTL = 60 * 60 * 1000; // re-check each IP once per hour
+
+const HOSTING_KEYWORDS = [
+  "amazon", "aws", "google cloud", "google llc", "microsoft", "azure",
+  "digitalocean", "linode", "akamai", "vultr", "ovh", "hetzner",
+  "render", "heroku", "railway", "vercel", "netlify", "fly.io", "fly io",
+  "contabo", "hostinger", "oracle cloud", "alibaba", "tencent",
+  "scaleway", "leaseweb", "choopa", "packet", "upcloud", "salad",
+  "datacamp", "psychz", "colocrossing", "server", "hosting"
+];
+
+// Never block these even if flagged — avoids accidentally
+// locking out normal ISPs whose names happen to contain a keyword
+const ALLOW_KEYWORDS = ["mobile", "wireless", "broadband", "telecom", "fiber", "cable"];
+
+async function isHostingIP(ip) {
+  if (!ip) return false;
+
+  // Always allow local/private IPs (health checks, same-machine calls)
+  if (ip === "127.0.0.1" || ip === "::1" || ip.startsWith("10.") || ip.startsWith("192.168.")) {
+    return false;
+  }
+
+  const cached = ipCheckCache.get(ip);
+  if (cached && Date.now() - cached.time < IP_CHECK_TTL) {
+    return cached.blocked;
+  }
+
+  try {
+    const { data } = await ax.get(
+      `http://ip-api.com/json/${encodeURIComponent(ip)}?fields=isp,org,as,proxy,hosting`,
+      { timeout: 3000 }
+    );
+
+    const text = `${data.isp || ""} ${data.org || ""} ${data.as || ""}`.toLowerCase();
+
+    const isAllowed = ALLOW_KEYWORDS.some(k => text.includes(k));
+    const isFlagged =
+      data.hosting === true ||
+      data.proxy === true ||
+      HOSTING_KEYWORDS.some(k => text.includes(k));
+
+    const blocked = isFlagged && !isAllowed;
+
+    ipCheckCache.set(ip, { blocked, time: Date.now() });
+    return blocked;
+  } catch {
+    // If the lookup service itself fails, fail OPEN —
+    // never take the whole API down because a checker timed out
+    return false;
+  }
+}
+
+app.use(async (req, res, next) => {
+  try {
+    const ip = req.ip || req.connection?.remoteAddress || "";
+    const blocked = await isHostingIP(ip);
+
+    if (blocked) {
+      noCache(res);
+      return res.status(403).json({
+        success: false,
+        creator: CREATOR,
+        message: "Access denied — requests from hosting/datacenter IPs are not allowed"
+      });
+    }
+
+    next();
+  } catch {
+    next(); // never block traffic because our own middleware errored
+  }
+});
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // PAGES
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -810,6 +901,101 @@ app.get("/api/facebook", async (req, res) => {
 // ▶️ PLAY API
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━
+// FAST YOUTUBE SEARCH
+// Races yt-search against a second
+// source, and caches repeat queries
+// so the same song returns instantly
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+const searchCache = new Map();
+const SEARCH_CACHE_TTL = 20 * 60 * 1000;
+
+function normalizeVideo(v) {
+  return {
+    title: v.title,
+    url: v.url,
+    videoId: v.videoId,
+    duration: v.duration || v.timestamp,
+    views: v.views,
+    uploaded: v.uploaded || v.ago,
+    thumbnail: v.thumbnail,
+    author: { name: v.author?.name }
+  };
+}
+
+async function searchViaYts(query) {
+  const search = await yts(query);
+  const v = search.videos && search.videos[0];
+  if (!v) throw new Error("no result");
+  return normalizeVideo(v);
+}
+
+async function searchViaRabbit(query) {
+  const { data } = await ax.get(
+    `https://rabbitapi.nett.to/search/youtube?q=${encodeURIComponent(query)}&limit=1`,
+    { timeout: 8000 }
+  );
+  const v = data?.result?.[0];
+  if (!v) throw new Error("no result");
+  return normalizeVideo(v);
+}
+
+// Direct YouTube scrape — no middleman API at all,
+// parses ytInitialData straight off the results page
+async function searchViaDirect(query) {
+  const { data } = await ax.get("https://www.youtube.com/results", {
+    params: { search_query: query },
+    headers: {
+      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+    },
+    timeout: 8000
+  });
+
+  const match = data.match(/var ytInitialData = (.*?);<\/script>/s);
+  if (!match) throw new Error("parse failed");
+
+  const ytInitialData = JSON.parse(match[1]);
+  const contents = ytInitialData.contents?.twoColumnSearchResultsRenderer?.primaryContents?.sectionListRenderer?.contents;
+  if (!contents) throw new Error("no contents");
+
+  const section = contents.find(c => c.itemSectionRenderer)?.itemSectionRenderer?.contents;
+  if (!section) throw new Error("no section");
+
+  const first = section.find(i => i.videoRenderer && i.videoRenderer.lengthText);
+  if (!first) throw new Error("no result");
+
+  const v = first.videoRenderer;
+
+  return {
+    title: v.title?.runs?.[0]?.text || "No Title",
+    url: `https://youtu.be/${v.videoId}`,
+    videoId: v.videoId,
+    duration: v.lengthText?.simpleText || null,
+    views: v.viewCountText?.simpleText || null,
+    uploaded: v.publishedTimeText?.simpleText || null,
+    thumbnail: v.thumbnail?.thumbnails?.slice(-1)[0]?.url || null,
+    author: { name: null }
+  };
+}
+
+async function fastYoutubeSearch(query) {
+  const key = query.trim().toLowerCase();
+  const cached = searchCache.get(key);
+  if (cached && Date.now() - cached.time < SEARCH_CACHE_TTL) {
+    return cached.video;
+  }
+
+  const video = await Promise.any([
+    searchViaYts(query),
+    searchViaRabbit(query),
+    searchViaDirect(query)
+  ]);
+
+  searchCache.set(key, { video, time: Date.now() });
+  return video;
+}
+
 app.get("/api/play", async (req, res) => {
   noCache(res);
   try {
@@ -825,25 +1011,24 @@ app.get("/api/play", async (req, res) => {
     if (input.includes("youtube.com") || input.includes("youtu.be")) {
       video = { title: "YouTube Audio", url: input, videoId: null, duration: null, views: null, uploaded: null, thumbnail: null, author: { name: null } };
     } else {
-      const searchRes = await ax.get(
-        `https://rabbitapi.nett.to/search/youtube?q=${encodeURIComponent(input)}&limit=1`
-      );
-      video = searchRes.data.result[0];
+      try {
+        video = await fastYoutubeSearch(input);
+      } catch {
+        return res.json({ status: false, creator: CREATOR, message: "No result found" });
+      }
     }
 
     if (!video) return res.json({ status: false, creator: CREATOR, message: "No result found" });
 
-    const audioRes = await ax.get(
-      `https://rabbitapi.nett.to/api/song?url=${encodeURIComponent(video.url)}`
-    );
+    // Reuse the song backend directly (in-process) — no extra network hop
+    let songResult;
+    try {
+      songResult = await fetchSongDavid(video.url);
+    } catch {
+      return res.json({ status: false, creator: CREATOR, message: "Audio fetch failed" });
+    }
 
-    const audioUrl =
-      audioRes?.data?.payload?.result?.audio ||
-      audioRes?.data?.result?.audio ||
-      audioRes?.data?.result ||
-      null;
-
-    if (!audioUrl) return res.json({ status: false, creator: CREATOR, message: "Audio fetch failed" });
+    const proxy = cacheMedia(req, songResult.downloadUrl, ".mp3");
 
     res.json({
       status: true,
@@ -856,12 +1041,12 @@ app.get("/api/play", async (req, res) => {
         views: video.views,
         uploaded: video.uploaded,
         thumbnail: video.thumbnail,
-        url: audioUrl,
+        url: proxy,
         author: { name: video.author?.name }
       }
     });
   } catch (e) {
-    res.status(500).json({ status: false, creator: CREATOR, error: e.message });
+    res.status(500).json({ status: false, creator: CREATOR, message: "Something went wrong" });
   }
 });
 
