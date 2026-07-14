@@ -94,11 +94,34 @@ function cacheBufferMedia(req, buffer, contentType = "application/octet-stream",
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━
 // HTTPS AGENT — no keepAlive
+// (used only for the screenshot tool,
+// which hits arbitrary one-off sites)
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━
 const ssAgent = new https.Agent({
   keepAlive: false,
   maxSockets: 10,
   maxFreeSockets: 0,
+  timeout: 30000
+});
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━
+// KEEP-ALIVE AGENTS — for all
+// other outbound API calls.
+// Reuses TCP/TLS connections to the
+// same upstream host instead of
+// renegotiating on every request —
+// meaningfully faster under load.
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━
+const keepAliveHttpsAgent = new https.Agent({
+  keepAlive: true,
+  maxSockets: 100,
+  maxFreeSockets: 20,
+  timeout: 30000
+});
+const keepAliveHttpAgent = new http.Agent({
+  keepAlive: true,
+  maxSockets: 100,
+  maxFreeSockets: 20,
   timeout: 30000
 });
 
@@ -109,7 +132,9 @@ const ax = axios.create({
   timeout: 30000,
   headers: { "User-Agent": "Mozilla/5.0" },
   maxRedirects: 5,
-  decompress: true
+  decompress: true,
+  httpsAgent: keepAliveHttpsAgent,
+  httpAgent: keepAliveHttpAgent
 });
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -199,10 +224,12 @@ app.get("/category/downloader", (req, res) => {
   noCache(res);
   res.sendFile(__dirname + "/category/downloader.html");
 });
+
 app.get("/removebg", (req, res) => {
   noCache(res);
   res.sendFile(__dirname + "/removebg.html");
 });
+
 
 app.get("/api.html", (req, res) => {
   noCache(res);
@@ -943,6 +970,49 @@ error: err.message
 
 
 
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━
+// SONG BACKENDS — raced in parallel,
+// fastest successful one wins
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+async function fetchSongDavid(url) {
+  const { data } = await ax.get(
+    `https://apis.davidcyril.name.ng/download/savetube?url=${encodeURIComponent(url)}&format=mp3`,
+    { timeout: 15000 }
+  );
+
+  if (!data?.success || !data?.data?.download_url) {
+    throw new Error("source unavailable");
+  }
+
+  return {
+    title: data.data.title,
+    duration: data.data.duration,
+    quality: data.data.quality,
+    thumbnail: data.data.cover,
+    downloadUrl: data.data.download_url
+  };
+}
+
+async function fetchSongJerry(url) {
+  const { data } = await ax.get(
+    `https://jerrycoder.oggyapi.workers.dev/down/ytmp3?url=${encodeURIComponent(url)}`,
+    { timeout: 15000 }
+  );
+
+  if (data?.status !== "success" || !data?.url) {
+    throw new Error("source unavailable");
+  }
+
+  return {
+    title: data.title,
+    duration: data.duration,
+    quality: data.quality,
+    thumbnail: null,
+    downloadUrl: data.url
+  };
+}
+
 app.get("/api/song", async (req, res) => {
   noCache(res);
 
@@ -957,41 +1027,22 @@ app.get("/api/song", async (req, res) => {
       });
     }
 
-    // David API
-    const { data } = await ax.get(
-      `https://apis.davidcyril.name.ng/download/savetube?url=${encodeURIComponent(url)}&format=mp3`
-    );
+    // Race both backends — first successful response wins
+    const winner = await Promise.any([
+      fetchSongDavid(url),
+      fetchSongJerry(url)
+    ]);
 
-    if (!data?.success || !data?.data?.download_url) {
-      return res.status(404).json({
-        success: false,
-        creator: CREATOR,
-        message: "Song not found"
-      });
-    }
-
-    // Random 5-character ID
-    const id = randomId();
-
-    // Cache original URL
-    mediaCache.set(id + ".mp3", data.data.download_url);
-
-    // Auto delete after 10 minutes
-    setTimeout(() => {
-      mediaCache.delete(id + ".mp3");
-    }, 10 * 60 * 1000);
-
-    // Your own proxy URL
-    const proxy = `${req.protocol}://${req.get("host")}/media/${id}.mp3`;
+    const proxy = cacheMedia(req, winner.downloadUrl, ".mp3");
 
     return res.json({
       success: true,
       creator: CREATOR,
       result: {
-        title: data.data.title,
-        duration: data.data.duration,
-        quality: data.data.quality,
-        thumbnail: data.data.cover,
+        title: winner.title,
+        duration: winner.duration,
+        quality: winner.quality,
+        thumbnail: winner.thumbnail,
         format: "MP3",
         url: proxy,
         mp3: proxy,
@@ -1001,10 +1052,11 @@ app.get("/api/song", async (req, res) => {
     });
 
   } catch (err) {
-    return res.status(500).json({
+    // Both sources failed — return a clean generic error, no internal names
+    return res.status(404).json({
       success: false,
       creator: CREATOR,
-      error: err.message
+      message: "Song not found"
     });
   }
 });
@@ -1478,7 +1530,7 @@ app.get("/api/removebg", async (req, res) => {
     res.status(500).json({
       status: false,
       creator: CREATOR,
-      error: err.message
+      message: "Failed to remove background"
     });
   }
 });
@@ -1529,7 +1581,7 @@ app.post("/api/removebg", upload.single("image"), async (req, res) => {
     res.status(500).json({
       status: false,
       creator: CREATOR,
-      error: err.message
+      message: "Failed to remove background"
     });
   } finally {
     if (req.file) req.file.buffer = null;
