@@ -1031,6 +1031,7 @@ app.get("/api/play", async (req, res) => {
     }
 
     const proxy = cacheMedia(req, songResult.downloadUrl, ".mp3");
+    const thumbnail = cacheMedia(req, video.thumbnail, ".jpg");
 
     res.json({
       status: true,
@@ -1042,7 +1043,7 @@ app.get("/api/play", async (req, res) => {
         duration: video.duration,
         views: video.views,
         uploaded: video.uploaded,
-        thumbnail: video.thumbnail,
+        thumbnail,
         url: proxy,
         author: { name: video.author?.name }
       }
@@ -1216,28 +1217,61 @@ app.get("/api/song", async (req, res) => {
   noCache(res);
 
   try {
-    const { url } = req.query;
+    const { q, url } = req.query;
+    const input = q || url;
 
-    if (!url) {
+    if (!input) {
       return res.status(400).json({
         success: false,
         creator: CREATOR,
-        message: "YouTube URL required"
+        message: "Enter song name or YouTube URL"
       });
     }
 
-    const result = await fetchSongDavid(url);
+    let videoUrl;
+    let searchMeta = null;
+
+    if (input.includes("youtube.com") || input.includes("youtu.be")) {
+      // Direct URL — skip search, go straight to the backend
+      videoUrl = input;
+    } else {
+      // Plain query — search first, then use the top result's URL
+      try {
+        searchMeta = await fastYoutubeSearch(input);
+      } catch {
+        return res.json({
+          success: false,
+          creator: CREATOR,
+          message: "No result found"
+        });
+      }
+      videoUrl = searchMeta.url;
+    }
+
+    let result;
+    try {
+      result = await fetchSongDavid(videoUrl);
+    } catch {
+      return res.status(404).json({
+        success: false,
+        creator: CREATOR,
+        message: "Song not found"
+      });
+    }
 
     const proxy = cacheMedia(req, result.downloadUrl, ".mp3");
+    const thumbnail = cacheMedia(req, result.thumbnail || searchMeta?.thumbnail || null, ".jpg");
 
     return res.json({
       success: true,
       creator: CREATOR,
+      query: input,
       result: {
-        title: result.title,
+        title: result.title || searchMeta?.title,
+        videoId: searchMeta?.videoId || null,
         duration: result.duration,
         quality: result.quality,
-        thumbnail: result.thumbnail,
+        thumbnail,
         format: "MP3",
         url: proxy,
         mp3: proxy,
@@ -1433,7 +1467,7 @@ app.get("/search/youtube", async (req, res) => {
       duration: v.duration,
       views: v.views,
       uploaded: v.uploaded,
-      thumbnail: v.thumbnail,
+      thumbnail: cacheMedia(req, v.thumbnail, ".jpg"),
       author: { name: null, url: null }
     }));
 
