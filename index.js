@@ -60,14 +60,20 @@ function randomId(len = 5, ext = ".mp3") {
 // Caches a remote URL and returns
 // your own domain proxy link that
 // streams it through /media/:file
+//
+// mode: "stream"   -> /media/:file fetches the upstream URL server-side
+//                      and pipes the bytes through (default, unchanged
+//                      behavior for every existing route)
+// mode: "redirect" -> /media/:file issues a 302 redirect straight to
+//                      the upstream URL instead of proxying it
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━
-function cacheMedia(req, sourceUrl, ext = ".mp4", ttlMs = 10 * 60 * 1000) {
+function cacheMedia(req, sourceUrl, ext = ".mp4", ttlMs = 10 * 60 * 1000, mode = "stream") {
   if (!sourceUrl) return null;
 
   const id = randomId(5, ext);
   const file = id + ext;
 
-  mediaCache.set(file, sourceUrl);
+  mediaCache.set(file, mode === "redirect" ? { url: sourceUrl, mode: "redirect" } : sourceUrl);
 
   setTimeout(() => {
     mediaCache.delete(file);
@@ -925,6 +931,69 @@ async function fastYoutubeSearch(query) {
   return video;
 }
 
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━
+// SONG BACKENDS
+// David = primary, Jerry = backup.
+// Both /api/song and /api/play call
+// getSongResult() so any backend added
+// here automatically applies to both.
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+async function fetchSongDavid(url) {
+  const { data } = await ax.get(
+    `https://apis.davidcyril.name.ng/download/savetube?url=${encodeURIComponent(url)}&format=mp3`,
+    { timeout: 10000 }
+  );
+
+  if (!data?.success || !data?.data?.download_url) {
+    throw new Error("source unavailable");
+  }
+
+  return {
+    title: data.data.title,
+    duration: data.data.duration,
+    quality: data.data.quality,
+    thumbnail: data.data.cover,
+    downloadUrl: data.data.download_url,
+    source: "david"
+  };
+}
+
+async function fetchSongJerry(url) {
+  const { data } = await ax.get(
+    `https://jerrycoder.oggyapi.workers.dev/down/ytmp3?url=${encodeURIComponent(url)}`,
+    { timeout: 15000, headers: JERRY_HEADERS }
+  );
+
+  if (data?.status !== "success" || !data?.url) {
+    throw new Error("jerry source unavailable");
+  }
+
+  return {
+    title: data.title,
+    duration: data.duration,
+    quality: data.quality,
+    thumbnail: null,
+    downloadUrl: data.url,
+    source: "jerry"
+  };
+}
+
+// Tries each backend in order, first success wins.
+// Add more backends here later — just push another
+// try/catch step, nothing else needs to change.
+async function getSongResult(videoUrl) {
+  try {
+    return await fetchSongDavid(videoUrl);
+  } catch (_) {}
+
+  try {
+    return await fetchSongJerry(videoUrl);
+  } catch (_) {}
+
+  throw new Error("all sources failed");
+}
+
 app.get("/api/play", async (req, res) => {
   noCache(res);
   try {
@@ -949,15 +1018,21 @@ app.get("/api/play", async (req, res) => {
 
     if (!video) return res.json({ status: false, creator: CREATOR, message: "No result found" });
 
-    // Reuse the song backend directly (in-process) — no extra network hop
+    // Reuse the exact same backend logic as /api/song (David -> Jerry fallback)
     let songResult;
     try {
-      songResult = await fetchSongDavid(video.url);
+      songResult = await getSongResult(video.url);
     } catch {
       return res.json({ status: false, creator: CREATOR, message: "Audio fetch failed" });
     }
 
-    const proxy = cacheMedia(req, songResult.downloadUrl, ".mp3");
+    const proxy = cacheMedia(
+      req,
+      songResult.downloadUrl,
+      ".mp3",
+      10 * 60 * 1000,
+      songResult.source === "jerry" ? "redirect" : "stream"
+    );
     const thumbnail = cacheMedia(req, video.thumbnail, ".jpg");
 
     res.json({
@@ -1117,29 +1192,6 @@ error: err.message
 
 
 
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━
-// SONG BACKEND
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-async function fetchSongDavid(url) {
-  const { data } = await ax.get(
-    `https://apis.davidcyril.name.ng/download/savetube?url=${encodeURIComponent(url)}&format=mp3`,
-    { timeout: 10000 }
-  );
-
-  if (!data?.success || !data?.data?.download_url) {
-    throw new Error("source unavailable");
-  }
-
-  return {
-    title: data.data.title,
-    duration: data.data.duration,
-    quality: data.data.quality,
-    thumbnail: data.data.cover,
-    downloadUrl: data.data.download_url
-  };
-}
-
 app.get("/api/song", async (req, res) => {
   noCache(res);
 
@@ -1177,7 +1229,7 @@ app.get("/api/song", async (req, res) => {
 
     let result;
     try {
-      result = await fetchSongDavid(videoUrl);
+      result = await getSongResult(videoUrl);
     } catch {
       return res.status(404).json({
         success: false,
@@ -1186,7 +1238,13 @@ app.get("/api/song", async (req, res) => {
       });
     }
 
-    const proxy = cacheMedia(req, result.downloadUrl, ".mp3");
+    const proxy = cacheMedia(
+      req,
+      result.downloadUrl,
+      ".mp3",
+      10 * 60 * 1000,
+      result.source === "jerry" ? "redirect" : "stream"
+    );
     const thumbnail = cacheMedia(req, result.thumbnail || searchMeta?.thumbnail || null, ".jpg");
 
     return res.json({
@@ -1236,6 +1294,11 @@ app.get("/media/:file", async (req, res) => {
       res.setHeader("Content-Type", entry.contentType || "application/octet-stream");
       res.setHeader("Content-Length", entry.buffer.length);
       return res.end(entry.buffer);
+    }
+
+    // Redirect-mode entry — send client straight to the original URL
+    if (entry?.mode === "redirect") {
+      return res.redirect(entry.url);
     }
 
     // URL-based entry — proxy stream from the original source
