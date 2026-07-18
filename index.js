@@ -67,13 +67,25 @@ function randomId(len = 5, ext = ".mp3") {
 // mode: "redirect" -> /media/:file issues a 302 redirect straight to
 //                      the upstream URL instead of proxying it
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━
-function cacheMedia(req, sourceUrl, ext = ".mp4", ttlMs = 10 * 60 * 1000, mode = "stream") {
+function sanitizeFilename(name) {
+  if (!name) return null;
+  // strip characters that break Content-Disposition / filesystems
+  return name.replace(/[\/\\?%*:|"<>]/g, "").trim().slice(0, 150) || null;
+}
+
+function cacheMedia(req, sourceUrl, ext = ".mp4", ttlMs = 10 * 60 * 1000, mode = "stream", filename = null) {
   if (!sourceUrl) return null;
 
   const id = randomId(5, ext);
   const file = id + ext;
 
-  mediaCache.set(file, mode === "redirect" ? { url: sourceUrl, mode: "redirect" } : sourceUrl);
+  const cleanName = sanitizeFilename(filename);
+
+  mediaCache.set(file, {
+    url: sourceUrl,
+    mode,
+    filename: cleanName ? `${cleanName}${ext}` : null
+  });
 
   setTimeout(() => {
     mediaCache.delete(file);
@@ -1031,7 +1043,8 @@ app.get("/api/play", async (req, res) => {
       songResult.downloadUrl,
       ".mp3",
       10 * 60 * 1000,
-      songResult.source === "jerry" ? "redirect" : "stream"
+      songResult.source === "jerry" ? "redirect" : "stream",
+      video.title || songResult.title
     );
     const thumbnail = cacheMedia(req, video.thumbnail, ".jpg");
 
@@ -1243,7 +1256,8 @@ app.get("/api/song", async (req, res) => {
       result.downloadUrl,
       ".mp3",
       10 * 60 * 1000,
-      result.source === "jerry" ? "redirect" : "stream"
+      result.source === "jerry" ? "redirect" : "stream",
+      result.title || searchMeta?.title
     );
     const thumbnail = cacheMedia(req, result.thumbnail || searchMeta?.thumbnail || null, ".jpg");
 
@@ -1302,7 +1316,7 @@ app.get("/media/:file", async (req, res) => {
     }
 
     // URL-based entry — proxy stream from the original source
-    const url = entry;
+    const url = entry.url;
 
     const response = await ax({
       url,
@@ -1319,6 +1333,13 @@ app.get("/media/:file", async (req, res) => {
       res.setHeader(
         "Content-Length",
         response.headers["content-length"]
+      );
+    }
+
+    if (entry.filename) {
+      res.setHeader(
+        "Content-Disposition",
+        `attachment; filename="${entry.filename}"`
       );
     }
 
