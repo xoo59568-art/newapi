@@ -1038,12 +1038,17 @@ app.get("/api/play", async (req, res) => {
       return res.json({ status: false, creator: CREATOR, message: "Audio fetch failed" });
     }
 
+    // NOTE: both David and Jerry now use "redirect" mode — /media/:file
+    // just 302s straight to the upstream URL instead of proxy-streaming
+    // it through this server. This avoids all proxy-side stream issues
+    // (timeouts, gzip/Content-Length mismatches, mid-stream cuts) since
+    // the client's player/downloader talks directly to the real source.
     const proxy = cacheMedia(
       req,
       songResult.downloadUrl,
       ".mp3",
       10 * 60 * 1000,
-      songResult.source === "jerry" ? "redirect" : "stream",
+      "redirect",
       video.title || songResult.title
     );
     const thumbnail = cacheMedia(req, video.thumbnail, ".jpg");
@@ -1251,12 +1256,17 @@ app.get("/api/song", async (req, res) => {
       });
     }
 
+    // NOTE: both David and Jerry now use "redirect" mode — /media/:file
+    // just 302s straight to the upstream URL instead of proxy-streaming
+    // it through this server. This avoids all proxy-side stream issues
+    // (timeouts, gzip/Content-Length mismatches, mid-stream cuts) since
+    // the client's player/downloader talks directly to the real source.
     const proxy = cacheMedia(
       req,
       result.downloadUrl,
       ".mp3",
       10 * 60 * 1000,
-      result.source === "jerry" ? "redirect" : "stream",
+      "redirect",
       result.title || searchMeta?.title
     );
     const thumbnail = cacheMedia(req, result.thumbnail || searchMeta?.thumbnail || null, ".jpg");
@@ -1290,41 +1300,56 @@ app.get("/api/song", async (req, res) => {
 
 
 
+
 app.get("/media/:file", async (req, res) => {
   try {
+
     const entry = mediaCache.get(req.params.file);
 
     if (!entry) {
-      return res.status(404).json({ success: false, message: "Link expired" });
+      return res.status(404).json({
+        success: false,
+        message: "Link expired"
+      });
     }
 
+    // Buffer-based entry — serve directly, no upstream fetch needed
     if (Buffer.isBuffer(entry?.buffer)) {
       res.setHeader("Content-Type", entry.contentType || "application/octet-stream");
       res.setHeader("Content-Length", entry.buffer.length);
       return res.end(entry.buffer);
     }
 
+    // Redirect-mode entry — send client straight to the original URL
     if (entry?.mode === "redirect") {
       return res.redirect(entry.url);
     }
 
+    // URL-based entry — proxy stream from the original source
     const url = entry.url;
 
     const response = await ax({
       url,
       method: "GET",
       responseType: "stream",
-      timeout: 0
+      timeout: 0 // override global 30s timeout — long audio needs more time
     });
 
-    res.setHeader("Content-Type", response.headers["content-type"] || "audio/mpeg");
+    res.setHeader(
+      "Content-Type",
+      response.headers["content-type"] || "audio/mpeg"
+    );
 
-    // ❌ Content-Length আর forward করা যাবে না — decompress:true থাকলে
-    // asol decompressed size আলাদা হয়ে যায়, mismatch এ player fail করে।
-    // Chunked transfer encoding-এ ছেড়ে দাও (Express default এটাই করবে)।
+    // Content-Length intentionally NOT forwarded here: decompress:true on
+    // the shared `ax` instance means the byte count after decompression
+    // can differ from the upstream's compressed Content-Length, causing
+    // players to cut playback short. Left as chunked transfer instead.
 
     if (entry.filename) {
-      res.setHeader("Content-Disposition", `attachment; filename="${entry.filename}"`);
+      res.setHeader(
+        "Content-Disposition",
+        `attachment; filename="${entry.filename}"`
+      );
     }
 
     response.data.on("error", () => {
@@ -1341,12 +1366,16 @@ app.get("/media/:file", async (req, res) => {
 
   } catch (e) {
     if (!res.headersSent) {
-      res.status(500).json({ success: false, error: e.message });
+      res.status(500).json({
+        success: false,
+        error: e.message
+      });
     } else {
       res.end();
     }
   }
 });
+
 
 
 
@@ -1583,7 +1612,7 @@ app.get("/api/spotify", async (req, res) => {
       `https://jerrycoder.oggyapi.workers.dev/down/spotify?url=${encodeURIComponent(url)}`
     );
 
-    const proxy = cacheMedia(req, data.download_link, ".mp3");
+    const proxy = cacheMedia(req, data.download_link, ".mp3", 10 * 60 * 1000, "redirect");
 
     res.json({
       status: true,
@@ -1636,7 +1665,7 @@ app.get("/api/pinterest", async (req, res) => {
       `https://jerrycoder.oggyapi.workers.dev/down/pinterest?url=${encodeURIComponent(url)}`
     );
 
-    const proxy = cacheMedia(req, data.url, ".mp4");
+    const proxy = cacheMedia(req, data.url, ".mp4", 10 * 60 * 1000, "redirect");
     const thumbnail = cacheMedia(req, data.thumbnail, ".jpg");
 
     res.json({
@@ -1668,7 +1697,7 @@ app.get("/api/pint", async (req, res) => {
     const video = medias.find(v => v.extension === "mp4") || medias[0];
 
     const ext = video.extension ? `.${video.extension}` : ".mp4";
-    const proxy = cacheMedia(req, video.url, ext);
+    const proxy = cacheMedia(req, video.url, ext, 10 * 60 * 1000, "redirect");
     const thumbnail = cacheMedia(req, data.data.thumbnail, ".jpg");
 
     res.json({
