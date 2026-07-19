@@ -1290,61 +1290,43 @@ app.get("/api/song", async (req, res) => {
 
 
 
-
 app.get("/media/:file", async (req, res) => {
   try {
-
     const entry = mediaCache.get(req.params.file);
 
     if (!entry) {
-      return res.status(404).json({
-        success: false,
-        message: "Link expired"
-      });
+      return res.status(404).json({ success: false, message: "Link expired" });
     }
 
-    // Buffer-based entry — serve directly, no upstream fetch needed
     if (Buffer.isBuffer(entry?.buffer)) {
       res.setHeader("Content-Type", entry.contentType || "application/octet-stream");
       res.setHeader("Content-Length", entry.buffer.length);
       return res.end(entry.buffer);
     }
 
-    // Redirect-mode entry — send client straight to the original URL
     if (entry?.mode === "redirect") {
       return res.redirect(entry.url);
     }
 
-    // URL-based entry — proxy stream from the original source
     const url = entry.url;
 
     const response = await ax({
       url,
       method: "GET",
       responseType: "stream",
-      timeout: 0 // override global 30s timeout — long audio needs more time
+      timeout: 0
     });
 
-    res.setHeader(
-      "Content-Type",
-      response.headers["content-type"] || "audio/mpeg"
-    );
+    res.setHeader("Content-Type", response.headers["content-type"] || "audio/mpeg");
 
-    if (response.headers["content-length"]) {
-      res.setHeader(
-        "Content-Length",
-        response.headers["content-length"]
-      );
-    }
+    // ❌ Content-Length আর forward করা যাবে না — decompress:true থাকলে
+    // asol decompressed size আলাদা হয়ে যায়, mismatch এ player fail করে।
+    // Chunked transfer encoding-এ ছেড়ে দাও (Express default এটাই করবে)।
 
     if (entry.filename) {
-      res.setHeader(
-        "Content-Disposition",
-        `attachment; filename="${entry.filename}"`
-      );
+      res.setHeader("Content-Disposition", `attachment; filename="${entry.filename}"`);
     }
 
-    // Handle mid-stream upstream errors gracefully instead of a raw cut-off
     response.data.on("error", () => {
       if (!res.headersSent) {
         res.status(502).json({ success: false, error: "Upstream stream error" });
@@ -1353,22 +1335,19 @@ app.get("/media/:file", async (req, res) => {
       }
     });
 
-    // If client disconnects, stop the upstream stream too
     req.on("close", () => safeDestroy(response.data));
 
     response.data.pipe(res);
 
   } catch (e) {
     if (!res.headersSent) {
-      res.status(500).json({
-        success: false,
-        error: e.message
-      });
+      res.status(500).json({ success: false, error: e.message });
     } else {
       res.end();
     }
   }
 });
+
 
 
 
