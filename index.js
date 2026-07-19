@@ -1321,7 +1321,8 @@ app.get("/media/:file", async (req, res) => {
     const response = await ax({
       url,
       method: "GET",
-      responseType: "stream"
+      responseType: "stream",
+      timeout: 0 // override global 30s timeout — long audio needs more time
     });
 
     res.setHeader(
@@ -1343,17 +1344,31 @@ app.get("/media/:file", async (req, res) => {
       );
     }
 
+    // Handle mid-stream upstream errors gracefully instead of a raw cut-off
+    response.data.on("error", () => {
+      if (!res.headersSent) {
+        res.status(502).json({ success: false, error: "Upstream stream error" });
+      } else {
+        res.end();
+      }
+    });
+
+    // If client disconnects, stop the upstream stream too
+    req.on("close", () => safeDestroy(response.data));
+
     response.data.pipe(res);
 
   } catch (e) {
-    res.status(500).json({
-      success: false,
-      error: e.message
-    });
+    if (!res.headersSent) {
+      res.status(500).json({
+        success: false,
+        error: e.message
+      });
+    } else {
+      res.end();
+    }
   }
 });
-
-
 
 
 
